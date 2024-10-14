@@ -97,11 +97,9 @@ void FluidSimulation::initializeMixbox(FluidSimulationMixboxLutData data) {
     _logfile.log(std::ostringstream().flush() << 
                  _logfile.getTime() << " initializeMixbox: " << data.size << std::endl);
 
-    mixbox_initialize(data.data, data.size);
-
     // Output a simple test to the logfile
     unsigned char r,g,b;
-    mixbox_lerp_srgb8(252, 211, 0, 0, 0, 96, 0.5f, &r,&g,&b);
+    mixbox_lerp(252, 211, 0, 0, 0, 96, 0.5f, &r,&g,&b);
     _logfile.log(std::ostringstream().flush() << 
                  _logfile.getTime() << " initializeMixboxTest: " << (int)r << " " << (int)g << " " << (int)b << std::endl);
 }
@@ -6967,11 +6965,11 @@ void FluidSimulation::_updateMarkerParticleColorAttributeMixingThread(int starti
             for (size_t ridx = 1; ridx < refs.size(); ridx++) {
                 vmath::vec3 ci = colors->at(refs[ridx].id);
                 float t = 1.0f / ((float)(ridx + 1));
-                mixbox_lerp_srgb32f(r, g, b, ci.x, ci.y, ci.z, t, &r,&g,&b);
+                mixbox_lerp_float(r, g, b, ci.x, ci.y, ci.z, t, &r,&g,&b);
             }
 
             if (refs.size() > 0) {
-                mixbox_lerp_srgb32f(colorOld.x, colorOld.y, colorOld.z, r, g, b, mixRate, &r,&g,&b);
+                mixbox_lerp_float(colorOld.x, colorOld.y, colorOld.z, r, g, b, mixRate, &r,&g,&b);
                 vmath::vec3 colorNew(r, g, b);
                 colorsNew->at(i) = colorNew;
                 colorsNewValid->at(i) = true;

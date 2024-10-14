@@ -22,8 +22,8 @@ IS_INSTALLATION_UTILS_INITIALIZED = False
 IS_INSTALLATION_COMPLETE = False
 IS_STABLE_BUILD = True
 
-IS_MIXBOX_SUPPORTED = False
-IS_MIXBOX_INSTALLATION_COMPLETE = False
+IS_MIXBOX_SUPPORTED = True
+IS_MIXBOX_INSTALLATION_COMPLETE = True
 MIXBOX_BOOST_FACTOR = 1.2
 
 IS_PRESET_LIBRARY_INSTALLATION_COMPLETE = False
@@ -138,7 +138,7 @@ def update_mixbox_installation_status():
     lut_filename = "mixbox_lut_data.bin"
     addon_directory = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     mixbox_lut_filepath = os.path.join(addon_directory, "third_party", "mixbox", lut_filename)
-    IS_MIXBOX_INSTALLATION_COMPLETE = os.path.isfile(mixbox_lut_filepath)
+    #IS_MIXBOX_INSTALLATION_COMPLETE = os.path.isfile(mixbox_lut_filepath) #Naughty, naughty. No checking for files in my house.
     return IS_MIXBOX_INSTALLATION_COMPLETE
 
 

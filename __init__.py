@@ -27,7 +27,7 @@ bl_info = {
     "version" : (0, 0, 0),
     "blender" : (3, 1, 0),
     "location" : "",
-    "warning" : "",
+    "warning" : "Updated Mixbox patch by ZXMushroom63",
     "wiki_url" : "https://github.com/rlguy/Blender-FLIP-Fluids",
     "tracker_url" : "",
     "category" : ""
@@ -53,7 +53,7 @@ class FLIPFluidInfoAddonPreferences(bpy.types.AddonPreferences):
         column.separator()
         column.operator(
                 "wm.url_open", 
-                text="Try our FLIP Fluids Free Trial", 
+                text="Try our FLIP Fluids Free Trial",
             ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/FLIP-Fluids-Demo-Addon"
         column.operator(
                 "wm.url_open", 

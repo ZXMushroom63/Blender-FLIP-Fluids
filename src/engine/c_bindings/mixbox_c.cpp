@@ -46,7 +46,7 @@ extern "C" {
     EXPORTDLL void Mixbox_initialize(MixboxLutData data, int *err) {
         *err = CBindings::SUCCESS;
         try {
-            mixbox_initialize(data.data, data.size);
+            //mixbox_initialize(data.data, data.size);
         } catch (std::exception &ex) {
             CBindings::set_error_message(ex);
             *err = CBindings::FAIL;
@@ -57,7 +57,7 @@ extern "C" {
         *err = CBindings::SUCCESS;
         int result = 0;
         try {
-            result = (int)mixbox_is_initialized();
+            result = (int) 1;
         } catch (std::exception &ex) {
             CBindings::set_error_message(ex);
             *err = CBindings::FAIL;
@@ -71,7 +71,7 @@ extern "C" {
         vmath::vec3 color;
         try {
             float r, g, b;
-            mixbox_lerp_srgb32f(r1, g1, b1, r2, g2, b2, t, &r, &g, &b);
+            mixbox_lerp_float(r1, g1, b1, r2, g2, b2, t, &r, &g, &b);
             color.x = r;
             color.y = g;
             color.z = b;
