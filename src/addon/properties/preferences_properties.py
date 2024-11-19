@@ -625,7 +625,7 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
         if not vcu.is_blender_33():
             box.label(text="Blender 3.3 or later is required for this feature", icon="ERROR")
 
-        is_preset_library_supported = False
+        is_preset_library_supported = True
         if not is_preset_library_supported:
             column = box.column(align=True)
             column.label(text="Preset Library features are not supported in this version of the FLIP Fluids addon.", icon="ERROR")
