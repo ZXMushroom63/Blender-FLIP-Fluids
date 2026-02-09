@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (C) 2024 Ryan L. Guy
+Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -288,6 +288,18 @@ extern "C" {
     EXPORTDLL void MeshFluidSource_set_viscosity(MeshFluidSource* obj, float v, int *err) {
         CBindings::safe_execute_method_void_1param(
             obj, &MeshFluidSource::setViscosity, v, err
+        );
+    }
+
+    EXPORTDLL int MeshFluidSource_get_density(MeshFluidSource* obj, int *err) {
+        return CBindings::safe_execute_method_ret_0param(
+            obj, &MeshFluidSource::getDensity, err
+        );
+    }
+
+    EXPORTDLL void MeshFluidSource_set_density(MeshFluidSource* obj, float v, int *err) {
+        CBindings::safe_execute_method_void_1param(
+            obj, &MeshFluidSource::setDensity, v, err
         );
     }
 

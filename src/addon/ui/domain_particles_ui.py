@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,48 +32,33 @@ def _draw_geometry_attributes_menu(self, context):
     obj = vcu.get_active_object(context)
     pprops = obj.flip_fluid.domain.particles
     sprops = obj.flip_fluid.domain.surface
-    show_documentation = vcu.get_addon_preferences(context).show_documentation_in_ui
     
     #
     # Geometry Attributes
     #
+    #
     box = self.layout.box()
-    row = box.row(align=True)
-    row.prop(pprops, "geometry_attributes_expanded",
-        icon="TRIA_DOWN" if pprops.geometry_attributes_expanded else "TRIA_RIGHT",
-        icon_only=True, 
-        emboss=False
-    )
+    header, body = box.panel("fluid_particle_geometry_attributes", default_closed=True)
+
+    row = header.row(align=True)
     row.label(text="Fluid Particle Attributes:")
-
-    if pprops.geometry_attributes_expanded:
-        if not vcu.is_blender_31():
-            column = box.column(align=True)
-            column.enabled = False
-            column.label(text="Geometry attribute features for fluid particles are only available in", icon='ERROR')
-            column.label(text="Blender 3.1 or later", icon='ERROR')
-            return
-
+    if body:
         #
         # Velocity Attributes
         #
-        subbox = box.box()
-        row = subbox.row(align=True)
-        row.prop(pprops, "velocity_attributes_expanded",
-            icon="TRIA_DOWN" if pprops.velocity_attributes_expanded else "TRIA_RIGHT",
-            icon_only=True, 
-            emboss=False
-        )
-        row.label(text="Velocity Based Attributes:")
+        box = body.box()
+        header_velocity, body_velocity = box.panel("fluid_particle_velocity_attributes", default_closed=True)
 
-        if pprops.velocity_attributes_expanded:
-            column = subbox.column(align=True)
+        row_velocity = header_velocity.row(align=True)
+        row_velocity.label(text="Velocity Based Attributes:")
+        if body_velocity:
+            column = body_velocity.column(align=True)
             column.prop(pprops, "enable_fluid_particle_velocity_vector_attribute", text="Velocity Attributes")
             column.prop(pprops, "enable_fluid_particle_speed_attribute", text="Speed Attributes")
             column.prop(pprops, "enable_fluid_particle_vorticity_vector_attribute", text="Vorticity Attributes")
             column.operator("flip_fluid_operators.helper_initialize_motion_blur")
         else:
-            row = row.row(align=True)
+            row = row_velocity.row(align=True)
             row.alignment = 'RIGHT'
             row.prop(pprops, "enable_fluid_particle_velocity_vector_attribute", text="Velocity")
             row.prop(pprops, "enable_fluid_particle_speed_attribute", text="Speed")
@@ -82,23 +67,19 @@ def _draw_geometry_attributes_menu(self, context):
         #
         # Color Attributes
         #
-        subbox = box.box()
-        row = subbox.row(align=True)
-        row.prop(pprops, "color_attributes_expanded",
-            icon="TRIA_DOWN" if pprops.color_attributes_expanded else "TRIA_RIGHT",
-            icon_only=True, 
-            emboss=False
-        )
-        row.label(text="Color and Mixing Attributes:")
+        box = body.box()
+        header_color, body_color = box.panel("fluid_particle_color_attributes", default_closed=True)
 
-        if pprops.color_attributes_expanded:
-            column = subbox.column(align=True)
+        row_color = header_color.row(align=True)
+        row_color.label(text="Color and Mixing Attributes:")
+        if body_color:
+            column = body_color.column(align=True)
             split = column.split(align=True)
             column_left = split.column(align=True)
             column_right = split.column(align=True)
             column_left.prop(pprops, "enable_fluid_particle_color_attribute", text="Color Attributes")
 
-            column = subbox.column(align=True)
+            column = body_color.column(align=True)
             split = column.split(align=True)
             column_left = split.column(align=True)
             column_right = split.column(align=True)
@@ -106,9 +87,8 @@ def _draw_geometry_attributes_menu(self, context):
             column_left.prop(sprops, "enable_color_attribute_mixing", text="Enable Mixing")
             column_right.enabled = pprops.enable_fluid_particle_color_attribute and sprops.enable_color_attribute_mixing
             column_right.prop(sprops, "color_attribute_mixing_rate", text="Mix Rate", slider=True)
-            column_right.prop(sprops, "color_attribute_mixing_radius", text="Mix Radius", slider=True)
 
-            column = subbox.column(align=True)
+            column = body_color.column(align=True)
             column.enabled = pprops.enable_fluid_particle_color_attribute and sprops.enable_color_attribute_mixing
             column.label(text="Mixing Mode:")
             row = column.row(align=True)
@@ -131,10 +111,10 @@ def _draw_geometry_attributes_menu(self, context):
                                 text="Open Preferences", icon="PREFERENCES"
                                 ).view_mode = 'PREFERENCES_MENU_VIEW_MIXBOX'
         else:
-            row = row.row(align=True)
+            row = row_color.row(align=True)
             row.alignment = 'RIGHT'
             row.prop(pprops, "enable_fluid_particle_color_attribute", text="Color")
-            row = row.row(align=True)
+            row = row_color.row(align=True)
             row.alignment = 'RIGHT'
             row.enabled = pprops.enable_fluid_particle_color_attribute
             row.prop(sprops, "enable_color_attribute_mixing", text="Mixing")
@@ -142,43 +122,30 @@ def _draw_geometry_attributes_menu(self, context):
         #
         # Other Attributes
         #
-        subbox = box.box()
-        row = subbox.row(align=True)
-        row.prop(pprops, "other_attributes_expanded",
-            icon="TRIA_DOWN" if pprops.other_attributes_expanded else "TRIA_RIGHT",
-            icon_only=True, 
-            emboss=False
-        )
-        row.label(text="Other Attributes:")
+        box = body.box()
+        header_other, body_other = box.panel("fluid_particle_other_attributes", default_closed=True)
 
-        if pprops.other_attributes_expanded:
-            column = subbox.column(align=True)
+        row_other = header_other.row(align=True)
+        row_other.label(text="Other Attributes:")
+        if body_other:
+            column = body_other.column(align=True)
             column.prop(pprops, "enable_fluid_particle_age_attribute", text="Age Attributes")
             row = column.row(align=True)
             row.prop(pprops, "enable_fluid_particle_lifetime_attribute", text="Lifetime Attributes")
             row.prop(sprops, "lifetime_attribute_death_time")
             column.prop(pprops, "enable_fluid_particle_whitewater_proximity_attribute", text="Whitewater Proximity Attributes")
             column.prop(pprops, "enable_fluid_particle_source_id_attribute", text="Source ID Attributes")
+            row = column.row(align=True)
+            row.prop(pprops, "enable_fluid_particle_uid_attribute", text="UID Attributes")
+            row.prop(pprops, "enable_fluid_particle_uid_attribute_reuse", text="Reuse UIDs")
         else:
-            row = row.row(align=True)
+            row = row_other.row(align=True)
             row.alignment = 'RIGHT'
             row.prop(pprops, "enable_fluid_particle_age_attribute", text="Age")
             row.prop(pprops, "enable_fluid_particle_lifetime_attribute", text="Life")
             row.prop(pprops, "enable_fluid_particle_whitewater_proximity_attribute", text="WW Prox.")
             row.prop(pprops, "enable_fluid_particle_source_id_attribute", text="Source ID")
-
-        if show_documentation:
-            column = box.column(align=True)
-            column.operator(
-                "wm.url_open", 
-                text="Domain Attributes Documentation", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Domain-Attributes-and-Data-Settings"
-            column.operator(
-                "wm.url_open", 
-                text="Attributes and Motion Blur Example Scenes", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Example-Scene-Descriptions#attribute-and-motion-blur-examples"
+            row.prop(pprops, "enable_fluid_particle_uid_attribute", text="UID")
 
     
 class FLIPFLUID_PT_DomainTypeFluidParticlesPanel(bpy.types.Panel):
@@ -203,42 +170,18 @@ class FLIPFLUID_PT_DomainTypeFluidParticlesPanel(bpy.types.Panel):
         dprops = obj.flip_fluid.domain
         pprops = obj.flip_fluid.domain.particles
         sprops = obj.flip_fluid.domain.surface
-        show_documentation = vcu.get_addon_preferences(context).show_documentation_in_ui
+        aprops = dprops.advanced
 
-        prefs = vcu.get_addon_preferences()
-        if not prefs.is_developer_tools_enabled():
-            warn_box = self.layout.box()
-            warn_column = warn_box.column(align=True)
-            warn_column.enabled = True
-            warn_column.label(text="     This feature is affected by a current bug in Blender.", icon='ERROR')
-            warn_column.label(text="     The Developer Tools option must be enabled in preferences")
-            warn_column.label(text="     to use this feature.")
-            warn_column.separator()
-            warn_column.prop(prefs, "enable_developer_tools", text="Enable Developer Tools in Preferences")
-            warn_column.separator()
-            warn_column.operator(
-                "wm.url_open", 
-                text="Important Info and Limitations", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Preferences-Menu-Settings#developer-tools"
-            return
-
+        #
+        # Fluid Particle Export Panel
+        #
         box = self.layout.box()
-        row = box.row(align=True)
-        row.prop(pprops, "fluid_particles_expanded",
-            icon="TRIA_DOWN" if pprops.fluid_particles_expanded else "TRIA_RIGHT",
-            icon_only=True, 
-            emboss=False
-        )
+        header, body = box.panel("fluid_particles", default_closed=False)
+
+        row = header.row(align=True)
         row.label(text="Fluid Particle Export:")
-
-        if not pprops.fluid_particles_expanded:
-            row = row.row(align=True)
-            row.alignment = 'RIGHT'
-            row.prop(pprops, "enable_fluid_particle_output")
-
-        if pprops.fluid_particles_expanded:
-            column = box.column(align=True)
+        if body:
+            column = body.column(align=True)
             column.prop(pprops, "enable_fluid_particle_output")
             subbox = column.box()
             subbox.enabled = pprops.enable_fluid_particle_output
@@ -249,26 +192,27 @@ class FLIPFLUID_PT_DomainTypeFluidParticlesPanel(bpy.types.Panel):
             subcolumn.prop(pprops, "enable_fluid_particle_interior_output")
             subcolumn.separator()
             subcolumn.prop(pprops, "fluid_particle_source_id_blacklist", text="Skip Particles With Source ID Value")
-
-        box = self.layout.box()
-        row = box.row(align=True)
-        row.prop(pprops, "fluid_particle_generation_expanded",
-            icon="TRIA_DOWN" if pprops.fluid_particle_generation_expanded else "TRIA_RIGHT",
-            icon_only=True, 
-            emboss=False
-        )
-        row.label(text="Fluid Particle Generation:")
-
-        aprops = dprops.advanced
-        if not pprops.fluid_particle_generation_expanded:
+        else:
             row = row.row(align=True)
             row.alignment = 'RIGHT'
-            row.prop(aprops, "jitter_surface_particles")
+            row.prop(pprops, "enable_fluid_particle_output")
 
-        if pprops.fluid_particle_generation_expanded:
-            column = box.column()
+        #
+        # Fluid Particle Generation Panel
+        #
+        box = self.layout.box()
+        header, body = box.panel("fluid_particle_generation", default_closed=True)
+
+        row = header.row(align=True)
+        row.label(text="Fluid Particle Generation:")
+        if body:
+            column = body.column()
             row = column.row(align=True)
             row.prop(aprops, "particle_jitter_factor", slider=True)
+            row.prop(aprops, "jitter_surface_particles")
+        else:
+            row = row.row(align=True)
+            row.alignment = 'RIGHT'
             row.prop(aprops, "jitter_surface_particles")
 
         _draw_fluid_particle_display_settings(self, context)

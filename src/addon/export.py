@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ from .objects import flip_fluid_map
 from .objects.flip_fluid_geometry_exporter import GeometryExportObject, MotionExportType, GeometryExportType
 from .utils import export_utils as utils
 from .objects.flip_fluid_aabb import AABB
-from .pyfluid import TriangleMesh
+from .ffengine import TriangleMesh
 from .utils import version_compatibility_utils as vcu
 from .utils import cache_utils, export_utils, installation_utils
 
@@ -74,8 +74,8 @@ def __get_domain_data_dict(context, dobj):
         errmsg += "to complete installation of the FLIP Fluids addon. Save, restart Blender, and "
         errmsg += "try again. Or (2) This version of the FLIP Fluids addon is not compatible "
         errmsg += "with the Blender version. Update to the latest version of the FLIP Fluids "
-        errmsg += "addon and try again. Or (3) This version of the FLIP Fluids addon has been "
-        errmsg += "compiled incorrectly or not fully compiled."
+        errmsg += "addon and try again. Contact the developers at support@flipfluids.com for "
+        errmsg += "assistance."
         bpy.ops.flip_fluid_operators.display_error(
                 'INVOKE_DEFAULT',
                 error_message="Installation or Compatibility Error",
@@ -120,14 +120,7 @@ def __get_domain_data_dict(context, dobj):
     initialize_properties['savestate_interval'] = dprops.simulation.savestate_interval
     initialize_properties['delete_outdated_savestates'] = dprops.simulation.delete_outdated_savestates
     initialize_properties['delete_outdated_meshes'] = dprops.simulation.delete_outdated_meshes
-
-    preferences = vcu.get_addon_preferences()
-    if len(preferences.gpu_devices) > 0:
-        initialize_properties['gpu_device'] = preferences.selected_gpu_device
-    else:
-        initialize_properties['gpu_device'] = ""
-
-    initialize_properties['enable_engine_debug_mode'] = preferences.engine_debug_mode
+        
     initialize_properties['geometry_database_filepath'] = dprops.cache.get_geometry_database_abspath()
 
     d['initialize'] = initialize_properties

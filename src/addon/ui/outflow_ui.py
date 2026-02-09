@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ class FLIPFLUID_PT_OutflowTypePanel(bpy.types.Panel):
         obj = vcu.get_active_object(context)
         obj_props = obj.flip_fluid
         outflow_props = obj_props.outflow
-        show_documentation = vcu.get_addon_preferences(context).show_documentation_in_ui
 
         show_disabled_in_viewport_warning = True
         if show_disabled_in_viewport_warning and obj.hide_viewport:
@@ -52,19 +51,6 @@ class FLIPFLUID_PT_OutflowTypePanel(bpy.types.Panel):
 
         column = self.layout.column()
         column.prop(obj_props, "object_type")
-
-        if show_documentation:
-            column = self.layout.column(align=True)
-            column.operator(
-                "wm.url_open", 
-                text="Outflow Object Documentation", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Outflow-Object-Settings"
-            column.operator(
-                "wm.url_open", 
-                text="Outflow objects must have manifold/watertight geometry", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Manifold-Meshes"
 
         column = self.layout.column()
         column.prop(outflow_props, "is_enabled")

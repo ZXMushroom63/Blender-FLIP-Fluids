@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ class FLIPFLUID_PT_ForceFieldTypePanel(bpy.types.Panel):
         obj = vcu.get_active_object(context)
         obj_props = obj.flip_fluid
         force_field_props = obj_props.force_field
-        show_documentation = vcu.get_addon_preferences(context).show_documentation_in_ui
 
         show_disabled_in_viewport_warning = True
         if show_disabled_in_viewport_warning and obj.hide_viewport:
@@ -97,25 +96,7 @@ class FLIPFLUID_PT_ForceFieldTypePanel(bpy.types.Panel):
                 icon="WORLD"
             ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Experimental-Builds"
             return
-
-        if show_documentation:
-            column = self.layout.column(align=True)
-            column.operator(
-                "wm.url_open", 
-                text="Force Field Object Settings", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Force-Field-Object-Settings"
-            column.operator(
-                    "wm.url_open", 
-                    text="Force Fields Video Tutorial", 
-                    icon="WORLD"
-                ).url = "https://youtu.be/bXhMpzERHpk"
-            column.operator(
-                "wm.url_open", 
-                text="Force Field Example Scenes", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Example-Scene-Descriptions#force-field-examples"
-
+            
         column = self.layout.column()
         column.prop(force_field_props, "is_enabled")
 
@@ -203,7 +184,7 @@ class FLIPFLUID_PT_ForceFieldTypePanel(bpy.types.Panel):
 
         self.layout.separator()
         box = self.layout.box()
-        box.label(text="Antigravity")
+        box.label(text="Antigravity:")
         column = box.column(align=True)
 
         if force_field_props.force_field_type == 'FORCE_FIELD_TYPE_POINT':
@@ -218,6 +199,18 @@ class FLIPFLUID_PT_ForceFieldTypePanel(bpy.types.Panel):
         elif force_field_props.force_field_type == 'FORCE_FIELD_TYPE_CURVE':
             column.prop(force_field_props, "gravity_scale_curve", slider=True)
             column.prop(force_field_props, "gravity_scale_width_curve", text="Width", slider=True)
+
+        dprops = context.scene.flip_fluid.get_domain_properties()
+        if dprops is not None:
+            box = self.layout.box()
+            box.label(text="Global Force Field Weights:")
+            column = box.column(align=True)
+            column.prop(dprops.world, "force_field_weight_fluid_particles", slider=True)
+            column.prop(dprops.world, "force_field_weight_whitewater_foam", slider=True)
+            column.prop(dprops.world, "force_field_weight_whitewater_bubble", slider=True)
+            column.prop(dprops.world, "force_field_weight_whitewater_spray", slider=True)
+            column.prop(dprops.world, "force_field_weight_whitewater_dust", slider=True)
+
         
         box = self.layout.box()
         box.label(text="Mesh Data Export:")

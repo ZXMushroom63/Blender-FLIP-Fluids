@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ import bpy, os, sqlite3, math
 from .flip_fluid_geometry_export_object import GeometryExportType, MotionExportType
 from ..filesystem import filesystem_protection_layer as fpl
 
-from ..pyfluid import TriangleMesh
+from ..ffengine import TriangleMesh
 
 
 class GeometryDatabase():

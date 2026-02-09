@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (C) 2024 Ryan L. Guy
+Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef FLUIDENGINE_AABB_H
-#define FLUIDENGINE_AABB_H
+#pragma once
 
 #include <vector>
 
@@ -79,5 +78,3 @@ private:
     void _findminmax(double v0, double v1, double v2, double *min, double *max);
     bool _planeBoxOverlap(vmath::vec3 normal, vmath::vec3 vert);
 };
-
-#endif

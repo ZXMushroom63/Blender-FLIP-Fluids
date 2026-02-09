@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ from ..utils import installation_utils
 __EXTENSION_WHITELIST = [
     ".backup",
     ".bat",
+    ".sh",
     ".bbox",
     ".bin",
     ".blend",
@@ -83,6 +84,10 @@ def get_directory_whitelist():
     preset_library_installations = installation_utils.get_preset_library_installations()
     for install in preset_library_installations:
         whitelist.append(install["path"])
+
+    if bpy.data.filepath:
+        compositing_tools_filepath = os.path.dirname(bpy.data.filepath)
+        whitelist.append(compositing_tools_filepath)
 
     return whitelist
 
@@ -219,7 +224,7 @@ def clear_cache_directory(cache_directory, clear_export=False, clear_logs=False,
     delete_file(stats_filepath)
 
     bakefiles_dir = os.path.join(cache_directory, "bakefiles")
-    extensions = [".bbox", ".bobj", ".data", ".wwp", ".wwf", ".wwi", ".fpd", ".ffd", ".ffp3", ".txt"]
+    extensions = [".bbox", ".bobj", ".data", ".wwp", ".wwf", ".wwi", ".fpd", ".ffd", ".ffp3", ".txt", ".json"]
     delete_files_in_directory(bakefiles_dir, extensions, remove_directory=True)
 
     temp_dir = os.path.join(cache_directory, "temp")
@@ -227,7 +232,7 @@ def clear_cache_directory(cache_directory, clear_export=False, clear_logs=False,
     delete_files_in_directory(temp_dir, extensions, remove_directory=True)
 
     scripts_dir = os.path.join(cache_directory, "scripts")
-    extensions = [".bat"]
+    extensions = [".bat", ".sh", ".txt"]
     delete_files_in_directory(scripts_dir, extensions, remove_directory=True)
 
     savestates_dir = os.path.join(cache_directory, "savestates")

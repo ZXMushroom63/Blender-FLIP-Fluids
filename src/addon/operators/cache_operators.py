@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -429,8 +429,7 @@ class FlipFluidIncreaseDecreaseCacheDirectory(bpy.types.Operator):
     bl_description = ("Increase or decrease a numbered suffix on the cache directory." + 
         " Note: this will not rename an existing cache directory")
 
-    increment_mode = StringProperty(default="INCREASE")
-    exec(vcu.convert_attribute_to_28("increment_mode"))
+    increment_mode: StringProperty(default="INCREASE")
 
 
     @classmethod
@@ -487,8 +486,7 @@ class FlipFluidIncreaseDecreaseRenderDirectory(bpy.types.Operator):
     bl_description = ("Increase or decrease a numbered suffix on the render output directory." + 
         " Note: this will not rename an existing render output directory")
 
-    increment_mode = StringProperty(default="INCREASE")
-    exec(vcu.convert_attribute_to_28("increment_mode"))
+    increment_mode: StringProperty(default="INCREASE")
 
 
     @classmethod
@@ -565,8 +563,7 @@ class FlipFluidIncreaseDecreaseCacheRenderVersion(bpy.types.Operator):
         " directory and render output directory. Note: this will not rename an" +
         " existing cache our render output directory")
 
-    increment_mode = StringProperty(default="INCREASE")
-    exec(vcu.convert_attribute_to_28("increment_mode"))
+    increment_mode: StringProperty(default="INCREASE")
 
 
     @classmethod

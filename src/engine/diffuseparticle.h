@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (C) 2024 Ryan L. Guy
+Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef FLUIDENGINE_DIFFUSEPARTICLE_H
-#define FLUIDENGINE_DIFFUSEPARTICLE_H
+#pragma once
 
 enum class DiffuseParticleType : char { 
     bubble = 0x00, 
@@ -50,5 +49,3 @@ struct DiffuseParticle {
                         type(DiffuseParticleType::notset),
                         id(ident) {}
 };
-
-#endif

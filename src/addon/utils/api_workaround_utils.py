@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,8 +29,6 @@ from .. import render
 def frame_change_post_apply_T71908_workaround(context, depsgraph=None):
     if not render.is_rendering():
         return
-    if not vcu.is_blender_281():
-        return
 
     dprops = context.scene.flip_fluid.get_domain_properties()
     if dprops is None:
@@ -50,6 +48,9 @@ def frame_change_post_apply_T71908_workaround(context, depsgraph=None):
     for p in render_paths:
         setattr(dprops.render, p, getattr(dprops_eval.render, p))
 
+    # Apply to FLIP Fluids sidebar
+    dprops.render.override_frame = dprops_eval.render.override_frame
+
     # Apply to any Ocean Modifer's 'Time' value on the mesh objects, a common issue for this bug
 
     cache_objects = [
@@ -68,28 +69,120 @@ def frame_change_post_apply_T71908_workaround(context, depsgraph=None):
             if obj.modifiers[i].type == 'OCEAN':
                 obj.modifiers[i].time = obj_eval.modifiers[i].time
 
-    # Apply to any FF_MotionBlur geometry node 'Motion Blur Scale' value on the mesh objects, another issue 
+    # Apply to any FF_GeometryNodes geometry node 'Motion Blur Scale' value on the mesh objects, another issue 
     # for this bug when adjusting motion blur for slow motion simulations.
-    # Also apply to other FF_MotionBlur inputs in case the user wants to keyframe these values.
+    # Also apply to other FF_GeometryNodes inputs in case the user wants to keyframe these values.
 
-    input_name_list = [
-        "Input_4",  # Motion Blur Scale
-        "Input_6",  # Particle Scale
-        "Input_8",  # Enable Motion Blur
-        "Input_9",  # Enable Point Cloud
-        "Input_10", # Enable Instancing
+    input_name_list_surface = [
+        "Input_6",    # Enable Motion Blur
+        "Input_4",    # Motion Blur Scale
+        "Socket_8",   # Apply Simulation Time Scale
+        "Socket_9",   # Apply Simulation World Scale
+        "Socket_5",   # Shade Smooth Surface
+        "Socket_11",  # Remove Mesh Near Domain Boundary
+        "Socket_12",  # X-
+        "Socket_13",  # Y-
+        "Socket_14",  # Z-
+        "Socket_15",  # X+
+        "Socket_16",  # Y+
+        "Socket_17",  # Z+ 
+        "Socket_18",  # Distance
+        "Socket_20",  # Flatten Mesh Near Domain Boundary
+        "Socket_21",  # Water Level Mode
+        "Socket_22",  # Water Level
+        "Socket_24",  # Flattened Width
+        "Socket_25",  # Transition Width
+        "Socket_27",  # Store Displacement Attribute
+        "Socket_26",  # Store Transition Mask Attribute
+        "Socket_0",   # Blur Velocity For Fading
+        "Socket_6",   # Blur Iterations
+    ]
+
+    input_name_list_fluid_particles = [
+        "Socket_16",  # Apply Material
+        "Input_8",    # Enable Motion Blur
+        "Input_4",    # Motion Blur Scale
+        "Socket_47",  # Apply Simulation Time Scale
+        "Socket_48",  # Apply Simulation World Scale
+        "Socket_12",  # Particle Display Mode
+        "Input_6",    # Particle Scale
+        "Socket_11",  # Particle Scale Multiplier
+        "Socket_2",   # Particle Scale Random
+        "Socket_21",  # Random Bias
+        "Socket_14",  # Instancing Mode
+        "Socket_18",  # Randomize Instance Rotation 
+        "Socket_19",  # Align Instance to Velocity
+        "Socket_10",  # Shade Smooth Instances
+        "Socket_17",  # Realize Instances
+        "Socket_51",  # Matched Flattened Surface Displacement
+        "Socket_30",  # Age Based Particle Scaling
+        "Socket_31",  # Starting Scale Factor
+        "Socket_32",  # Scaling Duration (Age)
+        "Socket_33",  # Age Offset
+        "Socket_34",  # Store Age Scaling Transition Attribute
+        "Socket_24",  # Lifetime Based Particle Scaling
+        "Socket_23",  # Final Scale Factor
+        "Socket_25",  # Scaling Duration (Lifetime)
+        "Socket_26",  # Lifetime Offset
+        "Socket_28",  # Store Lifetime Scaling Transition Attribute
+        "Socket_36",  # Filter Particle by Source ID
+        "Socket_37",  # Source ID 0
+        "Socket_38",  # Source ID 1
+        "Socket_39",  # Source ID 2
+        "Socket_40",  # Source ID 3
+        "Socket_41",  # Source ID 4
+        "Socket_42",  # Source ID 5
+        "Socket_43",  # Source ID 6
+        "Socket_44",  # Source ID 7
+        "Socket_45",  # Source ID 8
+        "Socket_1",   # Fading Width
+        "Socket_0",   # Fading Strength
+        "Socket_4",   # Fading Density
+    ]
+
+    input_name_list_whitewater = [
+        "Socket_16",  # Apply Material
+        "Input_8",    # Enable Motion Blur
+        "Input_4",    # Motion Blur Scale
+        "Socket_30",  # Apply Simulation Time Scale
+        "Socket_31",  # Apply Simulation World Scale
+        "Socket_12",  # Particle Display Mode
+        "Input_6",    # Particle Scale
+        "Socket_11",  # Particle Scale Multiplier
+        "Socket_2",   # Particle Scale Random
+        "Socket_21",  # Random Bias
+        "Socket_14",  # Instancing Mode
+        "Socket_18",  # Randomize Instance Rotation 
+        "Socket_19",  # Align Instance to Velocity
+        "Socket_10",  # Shade Smooth Instances
+        "Socket_17",  # Realize Instances
+        "Socket_34",  # Matched Flattened Surface Displacement
+        "Socket_24",  # Lifetime Based Particle Scaling
+        "Socket_23",  # Final Scale Factor
+        "Socket_25",  # Scaling Duration (Lifetime)
+        "Socket_26",  # Lifetime Offset
+        "Socket_28",  # Store Lifetime Scaling Transition Attribute
+        "Socket_1",   # Fading Width
+        "Socket_0",   # Fading Strength
+        "Socket_4",   # Fading Density
     ]
 
     for obj in cache_objects:
         obj_eval = obj.evaluated_get(depsgraph)
         for i in range(len(obj.modifiers)):
-            if obj.modifiers[i].type == 'NODES' and obj.modifiers[i].name.startswith("FF_MotionBlur"):
+            if obj.modifiers[i].type == 'NODES' and obj.modifiers[i].name.startswith("FF_GeometryNodes"):
+                mod_name = obj.modifiers[i].name
+                if   mod_name.startswith("FF_GeometryNodesSurface"):
+                    input_name_list = input_name_list_surface
+                elif mod_name.startswith("FF_GeometryNodesFluidParticles"):
+                    input_name_list = input_name_list_fluid_particles
+                elif mod_name.startswith("FF_GeometryNodesWhitewater"):
+                    input_name_list = input_name_list_whitewater
+                else:
+                    continue
+
                 for input_name in input_name_list:
-                    if obj.modifiers[i].name.startswith("FF_MotionBlurSurface") and input_name in obj.modifiers[i]:
-                        obj.modifiers[i][input_name] = obj_eval.modifiers[i][input_name]
-                    if obj.modifiers[i].name.startswith("FF_MotionBlurFluidParticles") and input_name in obj.modifiers[i]:
-                        obj.modifiers[i][input_name] = obj_eval.modifiers[i][input_name]
-                    elif obj.modifiers[i].name.startswith("FF_MotionBlurWhitewater") and input_name in obj.modifiers[i]:
+                    if input_name in obj.modifiers[i]:
                         obj.modifiers[i][input_name] = obj_eval.modifiers[i][input_name]
 
 
@@ -133,20 +226,12 @@ def load_post_update_cycles_visibility_forward_compatibility_from_blender_3():
     def set_cycles_ray_visibility(bl_object, is_enabled):
         # Cycles may not be enabled in the user's preferences
         try:
-            if vcu.is_blender_30():
-                bl_object.visible_camera = is_enabled
-                bl_object.visible_diffuse = is_enabled
-                bl_object.visible_glossy = is_enabled
-                bl_object.visible_transmission = is_enabled
-                bl_object.visible_volume_scatter = is_enabled
-                bl_object.visible_shadow = is_enabled
-            else:
-                bl_object.cycles_visibility.camera = is_enabled
-                bl_object.cycles_visibility.transmission = is_enabled
-                bl_object.cycles_visibility.diffuse = is_enabled
-                bl_object.cycles_visibility.scatter = is_enabled
-                bl_object.cycles_visibility.glossy = is_enabled
-                bl_object.cycles_visibility.shadow = is_enabled
+            bl_object.visible_camera = is_enabled
+            bl_object.visible_diffuse = is_enabled
+            bl_object.visible_glossy = is_enabled
+            bl_object.visible_transmission = is_enabled
+            bl_object.visible_volume_scatter = is_enabled
+            bl_object.visible_shadow = is_enabled
         except:
             pass
 
@@ -195,8 +280,14 @@ def get_enabled_features_affected_by_T88811(domain_properties=None):
 
     if dprops.whitewater.enable_velocity_vector_attribute:
         data_dict["attributes"]["whitewater"].append("Velocity")
+
+    # Disabled to prevent the warning popup from displaying on default settings (Whitewater ID enabled by default)
+    # TODO: Rework this warning to be less intrusive
+    """
     if dprops.whitewater.enable_id_attribute:
         data_dict["attributes"]["whitewater"].append("ID")
+    """
+
     if dprops.whitewater.enable_lifetime_attribute:
         data_dict["attributes"]["whitewater"].append("Lifetime")
 
@@ -368,10 +459,10 @@ def is_keyframed_hide_render_issue_relevant(scene):
             if not obj.animation_data:
                 continue
             anim_data = obj.animation_data
-            if not anim_data.action or not anim_data.action.fcurves:
+            if not anim_data.action or not anim_data.action.layers[0].strips[0].channelbag(anim_data.action.slots[0]).fcurves:
                 continue
 
-            for fcurve in anim_data.action.fcurves:
+            for fcurve in anim_data.action.layers[0].strips[0].channelbag(anim_data.action.slots[0]).fcurves:
                 if fcurve.data_path == "hide_render":
                     is_relevant = True
                     break

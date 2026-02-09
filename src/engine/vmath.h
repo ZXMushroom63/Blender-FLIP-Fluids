@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (C) 2024 Ryan L. Guy
+Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef FLUIDENGINE_VMATH_H
-#define FLUIDENGINE_VMATH_H
+#pragma once
 
 #include <iostream>
 #include <cmath>
@@ -257,5 +256,3 @@ inline quat cross(const vmath::quat &q1, const vmath::quat &q2) {
 }
 
 }
-
-#endif

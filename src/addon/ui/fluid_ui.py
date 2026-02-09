@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@ class FLIPFLUID_PT_FluidTypePanel(bpy.types.Panel):
         obj_props = obj.flip_fluid
         fluid_props = obj_props.fluid
         dprops = context.scene.flip_fluid.get_domain_properties()
-        show_documentation = vcu.get_addon_preferences(context).show_documentation_in_ui
 
         show_disabled_in_viewport_warning = True
         if show_disabled_in_viewport_warning and obj.hide_viewport:
@@ -56,19 +55,6 @@ class FLIPFLUID_PT_FluidTypePanel(bpy.types.Panel):
         column = self.layout.column()
         column.prop(obj_props, "object_type")
         column.separator()
-
-        if show_documentation:
-            column = self.layout.column(align=True)
-            column.operator(
-                "wm.url_open", 
-                text="Fluid Object Documentation", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Fluid-Object-Settings"
-            column.operator(
-                "wm.url_open", 
-                text="Fluid objects must have manifold/watertight geometry", 
-                icon="WORLD"
-            ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Manifold-Meshes"
 
         column.label(text="Trigger:")
         row = column.row(align= True)
@@ -118,15 +104,23 @@ class FLIPFLUID_PT_FluidTypePanel(bpy.types.Panel):
             column_left.prop(fluid_props, "initial_speed")
 
             target_collection = vcu.get_scene_collection()
-            if vcu.is_blender_28():
-                search_group = "all_objects"
-            else:
-                search_group = "objects"
+            search_group = "all_objects"
 
             column_right = split.column(align=True)
             column_right.label(text="Target Object:")
             column_right.prop_search(fluid_props, "target_object", target_collection, search_group, text="")
-            column_right.prop(fluid_props, "export_animated_target")
+            
+            target_object = fluid_props.get_target_object()
+            if target_object is not None:
+                is_target_domain = target_object.flip_fluid.is_domain()
+                target_props = target_object.flip_fluid.get_property_group()
+                if target_props is not None and not is_target_domain:
+                    column_right.prop(target_props, "export_animated_mesh", text="Export Animated Target")
+                else:
+                    column_right.prop(fluid_props, "export_animated_target")
+            else:
+                column_right.prop(fluid_props, "export_animated_target")
+
 
         column = box.column(align=True)
         split = vcu.ui_split(column, factor=0.66)
@@ -136,84 +130,95 @@ class FLIPFLUID_PT_FluidTypePanel(bpy.types.Panel):
         column.enabled = fluid_props.append_object_velocity
         column.prop(fluid_props, "append_object_velocity_influence")
 
-        if vcu.get_addon_preferences().is_developer_tools_enabled():
+        if vcu.get_addon_preferences().is_extra_features_enabled():
             box = self.layout.box()
             box.label(text="Geometry Attributes:")
             column = box.column(align=True)
-            if vcu.is_blender_293():
-                is_color_attribute_enabled = dprops is not None and (dprops.surface.enable_color_attribute or 
-                                                                     dprops.particles.enable_fluid_particle_color_attribute)
-                show_color = dprops is not None and is_color_attribute_enabled
-                split = column.split(align=True)
-                column_left = split.column(align=True)
-                column_left.enabled = show_color
-                column_left.prop(fluid_props, "color")
-                column_right = split.column(align=True)
-                column_right.label(text="")
-                row = column_right.row(align=True)
-                row.alignment = 'LEFT'
-                if dprops is not None and not show_color:
-                    row.operator("flip_fluid_operators.enable_color_attribute_tooltip", 
-                                 text="Enable Color Attribute", icon="PLUS", emboss=False)
-                if dprops is None:
-                    row.label(text="Domain required for this option")
-                column.separator()
+            
+            is_color_attribute_enabled = dprops is not None and (dprops.surface.enable_color_attribute or 
+                                                                 dprops.particles.enable_fluid_particle_color_attribute)
+            show_color = dprops is not None and is_color_attribute_enabled
+            split = column.split(align=True)
+            column_left = split.column(align=True)
+            column_left.enabled = show_color
+            column_left.prop(fluid_props, "color")
+            column_right = split.column(align=True)
+            column_right.label(text="")
+            row = column_right.row(align=True)
+            row.alignment = 'LEFT'
+            if dprops is not None and not show_color:
+                row.operator("flip_fluid_operators.enable_color_attribute_tooltip", 
+                             text="Enable Color Attribute", icon="PLUS", emboss=False)
+            if dprops is None:
+                row.label(text="Domain required for this option")
+            column.separator()
 
-                show_viscosity = dprops is not None and dprops.surface.enable_viscosity_attribute
-                split = column.split(align=True)
-                column_left = split.column(align=True)
-                column_left.enabled = show_viscosity
-                column_left.prop(fluid_props, "viscosity")
-                column_right = split.column(align=True)
-                row = column_right.row(align=True)
-                row.alignment = 'LEFT'
-                if dprops is not None and not show_viscosity:
-                    row.operator("flip_fluid_operators.enable_viscosity_attribute_tooltip", 
-                                 text="Enable Viscosity Attribute", icon="PLUS", emboss=False)
-                if dprops is None:
-                    row.label(text="Domain required for this option")
-                column.separator()
+            show_viscosity = dprops is not None and dprops.world.enable_viscosity and dprops.surface.enable_viscosity_attribute
+            split = column.split(align=True)
+            column_left = split.column(align=True)
+            column_left.enabled = show_viscosity
+            column_left.prop(fluid_props, "viscosity")
+            column_right = split.column(align=True)
+            row = column_right.row(align=True)
+            row.alignment = 'LEFT'
+            if dprops is not None and not show_viscosity:
+                row.operator("flip_fluid_operators.enable_viscosity_attribute_tooltip", 
+                             text="Enable Viscosity Attribute", icon="PLUS", emboss=False)
+            if dprops is None:
+                row.label(text="Domain required for this option")
+            column.separator()
 
-                is_lifetime_attribute_enabled = dprops is not None and (dprops.surface.enable_lifetime_attribute or 
-                                                                        dprops.particles.enable_fluid_particle_lifetime_attribute)
-                show_lifetime = dprops is not None and is_lifetime_attribute_enabled
-                split = column.split(align=True)
-                column_left = split.column(align=True)
-                column_left.enabled = show_lifetime
-                column_left.prop(fluid_props, "lifetime")
-                column_right = split.column(align=True)
-                row = column_right.row(align=True)
-                row.alignment = 'LEFT'
-                if dprops is not None and not show_lifetime:
-                    row.operator("flip_fluid_operators.enable_lifetime_attribute_tooltip", 
-                                 text="Enable Lifetime Attribute", icon="PLUS", emboss=False)
-                elif dprops is not None:
-                    row.alignment = 'EXPAND'
-                    row.prop(fluid_props, "lifetime_variance", text="Variance")
-                if dprops is None:
-                    row.label(text="Domain required for this option")
-                column.separator()
+            show_density = dprops is not None and dprops.world.enable_density_attribute
+            split = column.split(align=True)
+            column_left = split.column(align=True)
+            column_left.enabled = show_density
+            column_left.prop(fluid_props, "density")
+            column_right = split.column(align=True)
+            row = column_right.row(align=True)
+            row.alignment = 'LEFT'
+            if dprops is not None and not show_density:
+                row.operator("flip_fluid_operators.enable_density_attribute_tooltip", 
+                             text="Enable Density Attribute", icon="PLUS", emboss=False)
+            if dprops is None:
+                row.label(text="Domain required for this option")
+            column.separator()
 
-                is_source_id_attribute_enabled = dprops is not None and (dprops.surface.enable_source_id_attribute or 
-                                                                         dprops.particles.enable_fluid_particle_source_id_attribute)
-                show_source_id = dprops is not None and is_source_id_attribute_enabled
-                split = column.split(align=True)
-                column_left = split.column(align=True)
-                column_left.enabled = show_source_id
-                column_left.prop(fluid_props, "source_id")
-                column_right = split.column(align=True)
-                row = column_right.row(align=True)
-                row.alignment = 'LEFT'
-                if dprops is not None and not show_source_id:
-                    row.operator("flip_fluid_operators.enable_source_id_attribute_tooltip", 
-                                 text="Enable Source ID Attribute", icon="PLUS", emboss=False)
-                if dprops is None:
-                    row.label(text="Domain required for this option")
-                column.separator()
-            else:
-                column.enabled = False
-                column.label(text="Geometry attribute features are only available in", icon='ERROR')
-                column.label(text="Blender 2.93 or later", icon='ERROR')
+            is_lifetime_attribute_enabled = dprops is not None and (dprops.surface.enable_lifetime_attribute or 
+                                                                    dprops.particles.enable_fluid_particle_lifetime_attribute)
+            show_lifetime = dprops is not None and is_lifetime_attribute_enabled
+            split = column.split(align=True)
+            column_left = split.column(align=True)
+            column_left.enabled = show_lifetime
+            column_left.prop(fluid_props, "lifetime")
+            column_right = split.column(align=True)
+            row = column_right.row(align=True)
+            row.alignment = 'LEFT'
+            if dprops is not None and not show_lifetime:
+                row.operator("flip_fluid_operators.enable_lifetime_attribute_tooltip", 
+                             text="Enable Lifetime Attribute", icon="PLUS", emboss=False)
+            elif dprops is not None:
+                row.alignment = 'EXPAND'
+                row.prop(fluid_props, "lifetime_variance", text="Variance")
+            if dprops is None:
+                row.label(text="Domain required for this option")
+            column.separator()
+
+            is_source_id_attribute_enabled = dprops is not None and (dprops.surface.enable_source_id_attribute or 
+                                                                     dprops.particles.enable_fluid_particle_source_id_attribute)
+            show_source_id = dprops is not None and is_source_id_attribute_enabled
+            split = column.split(align=True)
+            column_left = split.column(align=True)
+            column_left.enabled = show_source_id
+            column_left.prop(fluid_props, "source_id")
+            column_right = split.column(align=True)
+            row = column_right.row(align=True)
+            row.alignment = 'LEFT'
+            if dprops is not None and not show_source_id:
+                row.operator("flip_fluid_operators.enable_source_id_attribute_tooltip", 
+                             text="Enable Source ID Attribute", icon="PLUS", emboss=False)
+            if dprops is None:
+                row.label(text="Domain required for this option")
+            column.separator()
 
         box = self.layout.box()
         box.label(text="Mesh Data Export:")

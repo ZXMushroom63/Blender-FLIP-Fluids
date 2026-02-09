@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -229,6 +229,16 @@ cmd_render_after_bake_mode = (
     ('CMD_RENDER_MODE_BATCH',  "Batch",  "Launch batch file command line render. This is equivalent to executing the 'Generate Batch File' operator followed by the 'Launch Batch File Render' operator."),
     )
 
+cmd_render_animation_mode = (
+    ('CMD_RENDER_MODE_NORMAL',          "Normal",          "Launch a normal command line animation render. This is equivalent to the Blender 'Render Animation' operator."),
+    ('CMD_RENDER_MODE_BATCH',           "Batch",           "Launch a batch command line animation render that renders each frame one by one, closing Blender after each frame. Useful for freeing system resources between frames and for automatically continuing the render if a crash is encountered."),
+    ('CMD_RENDER_MODE_MULTI_INSTANCE',  "Multi Instance",  "Launch multiple command line instances of Blender to render the animation. Each render instance will render separate frames simultaneously."),
+    )
+
+cmd_render_passes_animation_mode = (
+    ('CMD_RENDER_MODE_RENDER_PASSES', "Passes Rendering", "Compositing tools passes rendering is enabled. Launch a command line process to render each compositing pass."),
+    )
+
 color_mixing_modes = (
     ('COLOR_MIXING_MODE_RGB',    "RGB",    "Simulate color mixing using basic additive RGB blending."),
     ('COLOR_MIXING_MODE_MIXBOX', "Mixbox", "(recommended) Simulate color mixing using the physically accurate Mixbox pigment blending technology. Requires installation of the FLIP Fluids Mixbox plugin."),
@@ -263,4 +273,15 @@ preferences_menu_view_modes = (
     ('PREFERENCES_MENU_VIEW_MIXBOX',  "Mixbox Installation",  "Install the Mixbox color blending plugin"),
     ('PREFERENCES_MENU_VIEW_PRESETS', "Presets Installation", "Install the asset browser preset library"),
     ('PREFERENCES_MENU_VIEW_SUPPORT', "Help & Support",       "Info and links for help and support"),
+    )
+
+"""
+alembic_export_engines = (
+    ('ALEMBIC_EXPORT_ENGINE_FLIP_FLUIDS', "FLIP Fluids", "Export using the custom FLIP Fluids Alembic Exporter"),
+    ('ALEMBIC_EXPORT_ENGINE_BLENDER',     "Blender",     "Export using Blender's built-in Alembic Exporter")
+    )
+"""
+
+alembic_export_engines = (
+    ('ALEMBIC_EXPORT_ENGINE_BLENDER',     "Blender",     "Export using Blender's built-in Alembic Exporter"),
     )

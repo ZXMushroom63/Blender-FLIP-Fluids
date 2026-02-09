@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ from bpy.props import (
         )
 
 from ..presets import preset_library
-from ..pyfluid import gpu_utils
 from ..utils import version_compatibility_utils as vcu
 from ..utils import installation_utils
 from ..utils import audio_utils
@@ -48,8 +47,7 @@ class FLIPFluidPreferencesExportUserData(bpy.types.Operator):
     bl_description = ("Creates a backup of your user settings and presets as a" +
         " .zip file. All user data will be lost after uninstalling the addon.")
 
-    filepath = StringProperty(subtype="FILE_PATH")
-    exec(vcu.convert_attribute_to_28("filepath"))
+    filepath: StringProperty(subtype="FILE_PATH")
 
 
     @classmethod
@@ -181,12 +179,11 @@ class FLIPFluidPreferencesImportUserData(bpy.types.Operator, ImportHelper):
     bl_description = "Load user settings and presets from a previous installation"
 
     filename_ext = "*.zip"
-    filter_glob = StringProperty(
+    filter_glob: StringProperty(
             default="*.zip",
             options={'HIDDEN'},
             maxlen=255,
             )
-    exec(vcu.convert_attribute_to_28("filter_glob"))
 
 
 
@@ -265,12 +262,11 @@ class FLIPFluidInstallMixboxPlugin(bpy.types.Operator, ImportHelper):
                       " Fluids addon downloads")
 
     filename_ext = "*.plugin"
-    filter_glob = StringProperty(
+    filter_glob: StringProperty(
             default="*.plugin;*.zip",
             options={'HIDDEN'},
             maxlen=255,
             )
-    exec(vcu.convert_attribute_to_28("filter_glob"))
 
 
     @classmethod
@@ -378,12 +374,11 @@ class FLIPFluidInstallPresetLibrary(bpy.types.Operator, ImportHelper):
                       " The Preset Scenes file can be found in the FLIP Fluids addon downloads")
 
     filename_ext = "*.zip"
-    filter_glob = StringProperty(
+    filter_glob: StringProperty(
             default="*.zip",
             options={'HIDDEN'},
             maxlen=255,
             )
-    exec(vcu.convert_attribute_to_28("filter_glob"))
 
 
     @classmethod
@@ -513,9 +508,7 @@ class FLIPFluidInstallPresetLibrary(bpy.types.Operator, ImportHelper):
         for lib_entry in bl_filepaths.asset_libraries:
             if self.is_path_equal(lib_entry.path, preset_library_directory):
                 lib_entry.name = preset_library_name
-                if vcu.is_blender_35():
-                    # Only available in Blender >= 3.5
-                    lib_entry.import_method = 'APPEND'
+                lib_entry.import_method = 'APPEND'
 
         installation_utils.update_preset_library_installation_status()
         success_message = "The Preset Scenes Library has been installed successfully into the Blender Asset Browser."
@@ -530,11 +523,9 @@ class FLIPFluidSelectPresetLibraryFolder(bpy.types.Operator):
     bl_label = "Install Preset Folder"
     bl_description = ("Select an existing Preset Library installation folder and add it to the Blender Asset Browser")
 
-    directory = bpy.props.StringProperty(name="Directory", options={"HIDDEN"})
-    exec(vcu.convert_attribute_to_28("directory"))
+    directory: bpy.props.StringProperty(name="Directory", options={"HIDDEN"})
 
-    filter_folder = bpy.props.BoolProperty(default=True, options={"HIDDEN"})
-    exec(vcu.convert_attribute_to_28("filter_folder"))
+    filter_folder: bpy.props.BoolProperty(default=True, options={"HIDDEN"})
 
 
     @classmethod
@@ -644,9 +635,7 @@ class FLIPFluidSelectPresetLibraryFolder(bpy.types.Operator):
                     lib_version_str = "v" + str(version[0]) + "." + str(version[1]) + "." + str(version[2])
                     preset_library_name = "FLIP Fluids Addon Presets " + lib_version_str
                     lib_entry.name = preset_library_name
-                    if vcu.is_blender_35():
-                        # Only available in Blender >= 3.5
-                        lib_entry.import_method = 'APPEND'
+                    lib_entry.import_method = 'APPEND'
 
         installation_utils.update_preset_library_installation_status()
         success_message = "The Preset Scenes Library has been installed successfully into the Blender Asset Browser."
@@ -668,8 +657,7 @@ class FLIPFluidPresetLibraryCopyInstallLocation(bpy.types.Operator):
     bl_description = ("Copy the preset library location to the Install Location field and" + 
                       " system clipboard. The install location is the parent directory of the path listed below")
 
-    install_location = StringProperty(default="")
-    exec(vcu.convert_attribute_to_28("install_location"))
+    install_location: StringProperty(default="")
 
     def execute(self, context):
         preferences = vcu.get_addon_preferences()
@@ -684,8 +672,7 @@ class FLIPFluidUninstallPresetLibrary(bpy.types.Operator):
     bl_description = ("Uninstall the preset library. The preset library will be removed from" +
                       " the Blender Asset Browser and the files deleted from your system")
 
-    install_info_json_string = StringProperty(default="")
-    exec(vcu.convert_attribute_to_28("install_info_json_string"))
+    install_info_json_string: StringProperty(default="")
 
 
     def tag_redraw(self, context):
@@ -751,38 +738,8 @@ class FLIPFluidUninstallPresetLibrary(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
 
 
-class FLIPFluidPreferencesFindGPUDevices(bpy.types.Operator):
-    bl_idname = "flip_fluid_operators.preferences_find_gpu_devices"
-    bl_label = "Find GPU Devices"
-    bl_description = "Search for GPU compute devices"
-
-    def execute(self, context):
-        preferences = vcu.get_addon_preferences()
-
-        devices = gpu_utils.find_gpu_devices()
-        preferences.gpu_devices.clear()
-        max_score = -1
-        max_name = ""
-        for d in devices:
-            new_device = preferences.gpu_devices.add()
-            new_device.name = d['name']
-            new_device.description = d['description']
-            new_device.score = d['score']
-
-            if new_device.score > max_score:
-                max_score = new_device.score
-                max_name = new_device.name
-
-        preferences.selected_gpu_device = max_name
-        preferences.is_gpu_devices_initialized = True
-
-        self.report({'INFO'}, "Found " + str(len(devices)) + " GPU compute device(s).")
-        return {'FINISHED'}
-
-
 class VersionDataTextEntry(bpy.types.PropertyGroup):
-    text = StringProperty(default="")
-    exec(vcu.convert_attribute_to_28("text"))
+    text: StringProperty(default="")
 
 
 def get_gpu_string():
@@ -794,6 +751,34 @@ def get_gpu_string():
         except:
             pass
     return gpu_string
+
+
+def _anonymize_username_from_path(path):
+    # Try to remove/replace system username from filepath and replace with generic 'username'
+    split_path = path.split(os.sep)
+
+    # For correctly joining first element of path
+    if platform.system() == 'Windows':
+        split_path[0] += "\\"
+    else:
+        # MacOS/Linux
+        split_path[0] += "/" + split_path[0]
+
+    stripped_path = path
+    if "Users" in split_path:
+        # Windows/MacOS
+        users_index = split_path.index("Users")
+        if len(split_path) > users_index + 1:
+            stripped_parts = split_path[:users_index + 1] + ["username"] + split_path[users_index + 2:]
+            stripped_path = os.path.join(*stripped_parts)
+    elif "home" in split_path:
+        # Linux
+        home_index = split_path.index("home")
+        if len(split_path) > home_index + 1:
+            stripped_parts = split_path[:home_index + 1] + ["username"] + split_path[home_index + 2:]
+            stripped_path = os.path.join(*stripped_parts)
+
+    return stripped_path
 
 
 def get_system_info_dict():
@@ -861,7 +846,12 @@ def get_system_info_dict():
         print(traceback.format_exc())
         print(e)
 
-    addon_path_string = _get_addon_directory()
+    addon_path_string = "Unknown"
+    try:
+        addon_path_string = _anonymize_username_from_path(_get_addon_directory())
+    except Exception as e:
+        print(traceback.format_exc())
+        print(e)
 
     cache_path_string = "N/A"
     cache_path_exists_string = "N/A"
@@ -869,11 +859,12 @@ def get_system_info_dict():
     try:
         dprops = bpy.context.scene.flip_fluid.get_domain_properties()
         if dprops is not None:
-            cache_path_string = dprops.cache.get_cache_abspath()
-            cache_path_exists = os.path.isdir(cache_path_string)
+            cache_path_original = dprops.cache.get_cache_abspath()
+            cache_path_string = _anonymize_username_from_path(cache_path_original)
+            cache_path_exists = os.path.isdir(cache_path_original)
             cache_path_exists_string = str(cache_path_exists)
             if cache_path_exists:
-                logs_directory = os.path.join(cache_path_string, "logs")
+                logs_directory = os.path.join(cache_path_original, "logs")
                 if os.path.isdir(logs_directory):
                     log_files = [f for f in os.listdir(logs_directory) if os.path.isfile(os.path.join(logs_directory, f))]
                     log_files_string = str(len(log_files))
@@ -882,43 +873,36 @@ def get_system_info_dict():
         print(e)
 
     default_addons = [
-            "Pose Library",
-            "BioVision Motion Capture (BVH) format",
-            "FBX format",
-            "STL format",
-            "Scalable Vector Graphics (SVG) 1.1 format",
-            "Stanford PLY format",
-            "UV Layout",
-            "Wavefront OBJ format (legacy)",
-            "glTF 2.0 format",
-            "Cycles Render Engine",
-            "Web3D X3D/VRML2 format"
+            "io_anim_bvh",
+            "io_curve_svg",
+            "io_mesh_uv_layout",
+            "io_scene_fbx",
+            "io_scene_gltf2",
+            "cycles",
+            "pose_library",
+            "bl_pkg",
             ]
 
-    addons_string = ""
+    addons_list = []
+    addons_string = "Unknown"
     try:
-        if vcu.is_blender_42():
-            # TODO find method to retrieve installed addons/extensions for Blender 4.2
-            addons_string = "Unknown (Blender 4.2)"
+        for addon in bpy.context.preferences.addons:
+            addon_name = addon.module
+            addon_name = addon_name.split('.')[-1]
+            if addon_name and addon_name not in default_addons:
+                addons_list.append(addon_name)
+        if addons_list:
+            addons_string = ', '.join(addons_list)
         else:
-            for mod_name in bpy.context.preferences.addons.keys():
-                if mod_name not in sys.modules:
-                    continue
-                mod = sys.modules[mod_name]
-                addon_name = mod.bl_info.get("name")
-                if addon_name not in default_addons:
-                    addons_string += addon_name + ", "
-            addons_string = vcu.str_removesuffix(addons_string, ", ")
-
+            addons_string = None
     except Exception as e:
         print(traceback.format_exc())
         print(e)
-        addons_string = "Unknown"
 
-    developer_tools_string = "Uknown"
+    developer_tools_string = "Unknown"
     try:
         preferences = vcu.get_addon_preferences()
-        developer_tools_string = "Enabled" if preferences.enable_developer_tools else "Disabled"
+        developer_tools_string = "Enabled" if preferences.enable_extra_features else "Disabled"
     except Exception as e:
         print(traceback.format_exc())
         print(e)
@@ -990,7 +974,27 @@ def get_system_info_dict():
 
     blender_binary_string = "Unknown"
     try:
-        blender_binary_string  = bpy.app.binary_path
+        blender_binary_string  = _anonymize_username_from_path(bpy.app.binary_path)
+    except Exception as e:
+        print(traceback.format_exc())
+        print(e)
+
+    compiler_info_list = []
+    compiler_info_string = "Unknown"
+    try:
+        compiler_info_list = installation_utils.get_compiler_info_list()
+        if compiler_info_list:
+            compiler_info_string = "\n\t" + '\n\t'.join(compiler_info_list)
+    except Exception as e:
+        print(traceback.format_exc())
+        print(e)
+
+    library_list = []
+    library_info_string = "Unknown"
+    try:
+        library_list = installation_utils.get_library_list()
+        if library_list:
+            library_info_string = "\n\t" + '\n\t'.join(library_list)
     except Exception as e:
         print(traceback.format_exc())
         print(e)
@@ -1180,6 +1184,7 @@ def get_system_info_dict():
     d = {}
     d['blender_version'] = blender_version
     d['addon_version'] = bl_info.get('description', "Missing Version Label")
+    d['addon_support_license'] = installation_utils.get_support_license_label()
     d['operating_system'] = platform.platform()
     d['cpu'] = cpu_string
     d['threads'] = threads_string
@@ -1188,6 +1193,8 @@ def get_system_info_dict():
 
     d['addon_path'] = addon_path_string
     d['blender_binary'] = blender_binary_string
+    d['compiler_info'] = compiler_info_string
+    d['library_info'] = library_info_string
     d['renderer'] = renderer_string
     d['cycles_device'] = cycles_device_string
     d['viewport_modes'] = viewport_modes_string
@@ -1236,6 +1243,7 @@ class FlipFluidReportBugPrefill(bpy.types.Operator):
         user_info += "#### System and Blend File Information\n\n"
         user_info += "**Blender Version:** " + sys_info['blender_version'] + "\n"
         user_info += "**Addon Version:** " + sys_info['addon_version'] + "\n"
+        user_info += "**Addon Build:** " + sys_info['addon_support_license'] + "\n"
         user_info += "**OS:** " + sys_info['operating_system'] + "\n"
         user_info += "**GPU:** " + sys_info['gpu'] + "\n"
         user_info += "**CPU:** " + sys_info['cpu'] + "\n"
@@ -1244,6 +1252,8 @@ class FlipFluidReportBugPrefill(bpy.types.Operator):
 
         user_info += "**Blender Binary:** " + sys_info['blender_binary'] + "\n"
         user_info += "**Addon Path:** " + sys_info['addon_path'] + "\n"
+        user_info += "**Compiler Info:** " + sys_info['compiler_info'] + "\n"
+        user_info += "**Library Info:** " + sys_info['library_info'] + "\n"
         user_info += "**Renderer:** " + sys_info['renderer'] + "\n"
         user_info += "**Cycles Device:** " + sys_info['cycles_device'] + "\n"
         user_info += "**Viewport Modes:** " + sys_info['viewport_modes'] + "\n"
@@ -1296,6 +1306,7 @@ def get_system_info_string():
     user_info = ""
     user_info += "Blender Version: " + sys_info['blender_version'] + "\n"
     user_info += "Addon Version: " + sys_info['addon_version'] + "\n"
+    user_info += "Addon Build: " + sys_info['addon_support_license'] + "\n"
     user_info += "OS: " + sys_info['operating_system'] + "\n"
     user_info += "GPU: " + sys_info['gpu'] + "\n"
     user_info += "CPU: " + sys_info['cpu'] + "\n"
@@ -1304,6 +1315,8 @@ def get_system_info_string():
 
     user_info += "Blender Binary: " + sys_info['blender_binary'] + "\n"
     user_info += "Addon Path: " + sys_info['addon_path'] + "\n"
+    user_info += "Compiler Info: " + sys_info['compiler_info'] + "\n"
+    user_info += "Library Info: " + sys_info['library_info'] + "\n"
     user_info += "Renderer: " + sys_info['renderer'] + "\n"
     user_info += "Cycles Device: " + sys_info['cycles_device'] + "\n"
     user_info += "Viewport Modes: " + sys_info['viewport_modes'] + "\n"
@@ -1359,8 +1372,7 @@ class FlipFluidOpenPreferences(bpy.types.Operator):
     bl_label = "FLIP Fluids Preferences"
     bl_description = ("Open the FLIP Fluids addon preferences menu")
 
-    view_mode = StringProperty(default="NONE")
-    exec(vcu.convert_attribute_to_28("view_mode"))
+    view_mode: StringProperty(default="NONE")
 
 
     def execute(self, context):
@@ -1378,12 +1390,8 @@ class FlipFluidOpenPreferences(bpy.types.Operator):
         if self.view_mode in valid_view_modes:
             prefs = vcu.get_addon_preferences()
             prefs.preferences_menu_view_mode = self.view_mode
-
-        if vcu.is_blender_42():
-            module_name = base_package
-        else:
-            module_name = installation_utils.get_module_name()
-        bpy.ops.preferences.addon_show(module=module_name)
+            
+        bpy.ops.preferences.addon_show(module=base_package)
         return {'FINISHED'}
 
 
@@ -1411,9 +1419,7 @@ class FLIPFLUIDS_MT_help_menu(bpy.types.Menu):
     def draw(self, context):
         self.layout.operator("flip_fluid_operators.report_bug_prefill", icon="URL")
         self.layout.operator("flip_fluid_operators.copy_system_info", icon="COPYDOWN")
-
-        if vcu.is_blender_28():
-            self.layout.operator("flip_fluid_operators.open_preferences", icon="PREFERENCES").view_mode = 'NONE'
+        self.layout.operator("flip_fluid_operators.open_preferences", icon="PREFERENCES").view_mode = 'NONE'
 
 
 def draw_flip_fluids_help_menu(self, context):
@@ -1424,7 +1430,6 @@ def draw_flip_fluids_help_menu(self, context):
 def register():
     bpy.utils.register_class(FLIPFluidPreferencesExportUserData)
     bpy.utils.register_class(FLIPFluidPreferencesImportUserData)
-    bpy.utils.register_class(FLIPFluidPreferencesFindGPUDevices)
 
     bpy.utils.register_class(FLIPFluidInstallMixboxPlugin)
     bpy.utils.register_class(FLIPFluidUninstallMixboxPlugin)
@@ -1460,7 +1465,6 @@ def register():
 def unregister():
     bpy.utils.unregister_class(FLIPFluidPreferencesExportUserData)
     bpy.utils.unregister_class(FLIPFluidPreferencesImportUserData)
-    bpy.utils.unregister_class(FLIPFluidPreferencesFindGPUDevices)
 
     bpy.utils.unregister_class(FLIPFluidInstallMixboxPlugin)
     bpy.utils.unregister_class(FLIPFluidUninstallMixboxPlugin)

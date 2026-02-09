@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (C) 2024 Ryan L. Guy
+Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef FLUIDENGINE_DIFFUSEPARTICLESIMULATION_H
-#define FLUIDENGINE_DIFFUSEPARTICLESIMULATION_H
+#pragma once
 
 #if __MINGW32__ && !_WIN64
     #include "mingw32_threads/mingw.thread.h"
@@ -45,7 +44,6 @@ enum class DiffuseParticleType : char;
 class MeshLevelSet;
 class MACVelocityField;
 class ParticleLevelSet;
-class ParticleAdvector;
 class ForceFieldGrid;
 
 struct DiffuseParticleSimulationParameters {
@@ -542,5 +540,3 @@ private:
     int _currentDiffuseParticleID = 0;
     int _diffuseParticleIDLimit = 256;
 };
-
-#endif

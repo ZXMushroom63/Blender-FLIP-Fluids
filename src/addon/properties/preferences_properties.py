@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -50,36 +50,31 @@ def get_addon_preferences(context=None):
         context = bpy.context
 
     prefs = vcu.get_blender_preferences(context)
-    if vcu.is_blender_42():
-        id_name = base_package
-        return prefs.addons[id_name].preferences
-    else:
-        id_name = __name__.split(".")[0]
-        if id_name not in prefs.addons:
-            global FAKE_PREFERENCES
-            return FAKE_PREFERENCES
-        return prefs.addons[id_name].preferences
+    id_name = base_package
+    return prefs.addons[id_name].preferences
 
 
 class FLIPFluidGPUDevice(bpy.types.PropertyGroup):
-    conv = vcu.convert_attribute_to_28
-    name = StringProperty(); exec(conv("name"))
-    description = StringProperty(); exec(conv("description"))
-    score = FloatProperty(); exec(conv("score"))
+    name: StringProperty()
+    description: StringProperty()
+    score: FloatProperty()
 
 
 class FLIPFluidColorMixbox(bpy.types.PropertyGroup):
-    conv = vcu.convert_attribute_to_28
-    color = FloatVectorProperty(default=(0, 0, 0), subtype='COLOR', description="Color mix using Mixbox blending"); exec(conv("color"))
+    color: FloatVectorProperty(default=(0, 0, 0), subtype='COLOR', description="Color mix using Mixbox blending")
 
 
 class FLIPFluidColorRGB(bpy.types.PropertyGroup):
-    conv = vcu.convert_attribute_to_28
-    color = FloatVectorProperty(default=(0, 0, 0), subtype='COLOR', description="Color mix using basic RGB blending"); exec(conv("color"))
+    color: FloatVectorProperty(default=(0, 0, 0), subtype='COLOR', description="Color mix using basic RGB blending")
 
 
 def update_helper_category_name(self, context):
-    panel_ids = ['FLIPFLUID_PT_HelperPanelMain', 'FLIPFLUID_PT_HelperPanelDisplay', 'FLIPFLUID_PT_HelperTechnicalSupport']
+    panel_ids = [
+        'FLIPFLUID_PT_HelperPanelMain', 
+        'FLIPFLUID_PT_HelperPanelCompositingTools', 
+        'FLIPFLUID_PT_HelperPanelDisplay', 
+        'FLIPFLUID_PT_HelperTechnicalSupport'
+        ]
     for pid in panel_ids:
         is_panel_registered = hasattr(bpy.types, pid)
         if is_panel_registered:
@@ -97,21 +92,23 @@ def update_helper_category_name(self, context):
 
 class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
     global FAKE_PREFERENCES
-    if vcu.is_blender_42():
-        bl_idname = base_package
-    else:
-        bl_idname = __name__.split(".")[0]
+    bl_idname = base_package
+    option_path_supports_blend_relative = set()
+
+    # required for relative path support in Blender 4.5+
+    # https://docs.blender.org/api/4.5/bpy_types_enum_items/property_flag_items.html#rna-enum-property-flag-items
+    option_path_supports_blend_relative = {'PATH_SUPPORTS_BLEND_RELATIVE'}
     
 
-    preferences_menu_view_mode = EnumProperty(
+    preferences_menu_view_mode: EnumProperty(
             name="Preferences Menu View",
             description="Select the preferences category to view",
             items=types.preferences_menu_view_modes,
             default='PREFERENCES_MENU_VIEW_GENERAL',
             options={'HIDDEN'},
-            ); exec(vcu.convert_attribute_to_28("preferences_menu_view_mode"))
+            )
 
-    enable_helper = BoolProperty(
+    enable_helper: BoolProperty(
                 name="Enable Helper Sidebar",
                 description="Enable the FLIP Fluid helper menu in the 3D view sidebar."
                     " This menu contains operators to help with workflow and simulation setup",
@@ -119,29 +116,17 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 update=lambda self, context: self._update_enable_helper(context),
                 options={'HIDDEN'},
                 )
-    exec(vcu.convert_attribute_to_28("enable_helper"))
     FAKE_PREFERENCES.enable_helper = True
 
-    helper_category_name = StringProperty(
+    helper_category_name: StringProperty(
                 name="Panel Category",
                 description="Choose a category for the FLIP Fluids helper panel tab in the sidebar",
                 default="FLIP Fluids",
                 update=lambda self, context: self._update_helper_category_name(context),
                 )
-    exec(vcu.convert_attribute_to_28("helper_category_name"))
     FAKE_PREFERENCES.helper_category_name = "FLIP Fluids"
 
-    show_documentation_in_ui = BoolProperty(
-                name="Display documentation links in UI",
-                description="Display relevant documentation links within the UI. Documentation links will open in your browser."
-                    " This setting is also available from the FLIP Fluids sidebar menu",
-                default=False,
-                options={'HIDDEN'},
-                )
-    exec(vcu.convert_attribute_to_28("show_documentation_in_ui"))
-    FAKE_PREFERENCES.show_documentation_in_ui = False
-
-    engine_debug_mode = BoolProperty(
+    engine_debug_mode: BoolProperty(
             name="Engine Debug Mode", 
             description="Enable to run simulation engine in debug mode (slower, but is able to"
                 " generate crash errors). Disabling can speed up simulation by 10% - 15%, but if"
@@ -151,10 +136,9 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 " situation. Running with debug mode on or off will not affect simulation results", 
             default=False,
             ); 
-    exec(vcu.convert_attribute_to_28("engine_debug_mode"))
     FAKE_PREFERENCES.engine_debug_mode = False
 
-    enable_blend_file_logging = BoolProperty(
+    enable_blend_file_logging: BoolProperty(
             name="Save Blender Installation and Simulation Info to Blend File", 
             description="If enabled, save info about your Blender installation and simulation set up into the"
                 " Blend file. Saving this info into the Blend file helps improve turnaround time when requesting"
@@ -164,46 +148,41 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 " additional items and info when requesting support", 
             default=True,
             ); 
-    exec(vcu.convert_attribute_to_28("enable_blend_file_logging"))
     FAKE_PREFERENCES.enable_blend_file_logging = True
 
-    enable_experimental_build_warning = BoolProperty(
+    enable_experimental_build_warning: BoolProperty(
             name="Show Experimental Build Warning", 
             description="Disable to hide the experimental build warning/notification in the Physics menu", 
             default=True,
             ); 
-    exec(vcu.convert_attribute_to_28("enable_experimental_build_warning"))
     FAKE_PREFERENCES.enable_experimental_build_warning = True
 
-    enable_developer_tools = BoolProperty(
-            name="Enable Developer Tools", 
-            description="Enable to unlock developer tools and hidden features. Enable to unlock features"
-                " that may be experimental or considered unstable for rendering due to current bugs in Blender."
+    enable_extra_features: BoolProperty(
+            name="Enable Extra Features", 
+            description="Enable to unlock extra features"
+                " that may be considered unstable for rendering, baking, and exporting due to current bugs in Blender."
                 " Rendering issues can be completely avoided by rendering from the command line", 
-            default=False,
+            default=True,
             ); 
-    exec(vcu.convert_attribute_to_28("enable_developer_tools"))
-    FAKE_PREFERENCES.enable_developer_tools = False
+    FAKE_PREFERENCES.enable_extra_features = False
 
-    enable_support_tools = BoolProperty(
+    enable_support_tools: BoolProperty(
             name="Enable Technical Support Tools", 
             description="Used by the developers to assist in technical support requests", 
             default=False,
             ); 
-    exec(vcu.convert_attribute_to_28("enable_support_tools"))
     FAKE_PREFERENCES.enable_support_tools = False
 
-    cmd_save_blend_file_before_launch = BoolProperty(
+    cmd_save_blend_file_before_launch: BoolProperty(
             name="Autosave Blend file before launching command line operators", 
             description="Command line operators require the Blend file to be saved for changes to take effect when using command"
             " line operators. If enabled, the Blend file will be automatically saved when using command line operators so that"
             " manual saving is not necessary", 
             default=True,
             ); 
-    exec(vcu.convert_attribute_to_28("cmd_save_blend_file_before_launch"))
     FAKE_PREFERENCES.cmd_save_blend_file_before_launch = True
 
-    cmd_bake_max_attempts = IntProperty(
+    cmd_bake_max_attempts: IntProperty(
             name="Max Attempts",
             description="When using the command line baking operator, if a bake fails due to a crash or an error, attempt"
                 " to automatically re-launch and resume the baking process. This value is the maximum number of attempts that"
@@ -212,20 +191,18 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
             default=5,
             options={'HIDDEN'},
             )
-    exec(vcu.convert_attribute_to_28("cmd_bake_max_attempts"))
     FAKE_PREFERENCES.cmd_bake_max_attempts = False
 
-    enable_bake_alarm = BoolProperty(
+    enable_bake_alarm: BoolProperty(
             name="Play alarm after simulation finishes", 
             description="Play an alarm sound when the simulation baking process completes. The alarm will sound on both a"
                 " successful bake as well as a bake where an error is encountered. This feature may not work correctly if"
                 " a crash is encountered", 
             default=False,
             ); 
-    exec(vcu.convert_attribute_to_28("enable_bake_alarm"))
     FAKE_PREFERENCES.enable_experimental_build_warning = False
 
-    enable_presets = BoolProperty(
+    enable_presets: BoolProperty(
                 name="Enable Presets",
                 description="Presets are a deprecated feature that will no longer be updated. Enable to use the older preset"
                     " features, but be aware that you may encounter bugs or issues. Use at your own risk. Blender must be"
@@ -233,103 +210,89 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 default=False,
                 options={'HIDDEN'},
                 )
-    exec(vcu.convert_attribute_to_28("enable_presets"))
     FAKE_PREFERENCES.enable_presets = False
 
-    selected_gpu_device = EnumProperty(
+    selected_gpu_device: EnumProperty(
                 name="GPU Compute Device",
                 description="Device that will be used for GPU acceleration features",
                 items=lambda self, context=None: self._get_gpu_device_enums(context),
                 )
-    exec(vcu.convert_attribute_to_28("selected_gpu_device"))
     FAKE_PREFERENCES.selected_gpu_device = None
 
-    gpu_devices = CollectionProperty(type=FLIPFluidGPUDevice)
-    exec(vcu.convert_attribute_to_28("gpu_devices"))
+    gpu_devices: CollectionProperty(type=FLIPFluidGPUDevice)
     FAKE_PREFERENCES.gpu_devices = []
 
-    is_gpu_devices_initialized = BoolProperty(False)
-    exec(vcu.convert_attribute_to_28("is_gpu_devices_initialized"))
+    is_gpu_devices_initialized: BoolProperty(False)
     FAKE_PREFERENCES.is_gpu_devices_initialized = False
 
-    show_mixbox_menu = BoolProperty(default=False)
-    exec(vcu.convert_attribute_to_28("show_mixbox_menu"))
+    show_mixbox_menu: BoolProperty(default=False)
     FAKE_PREFERENCES.show_mixbox_menu = False
 
-    is_mixbox_installation_error = BoolProperty(default=False)
-    exec(vcu.convert_attribute_to_28("is_mixbox_installation_error"))
+    is_mixbox_installation_error: BoolProperty(default=False)
     FAKE_PREFERENCES.is_mixbox_installation_error = False
 
-    mixbox_installation_error_message = StringProperty(default="")
-    exec(vcu.convert_attribute_to_28("mixbox_installation_error_message"))
+    mixbox_installation_error_message: StringProperty(default="")
     FAKE_PREFERENCES.mixbox_installation_error_message = ""
 
-    mixbox_color1 = FloatVectorProperty(  
+    mixbox_color1: FloatVectorProperty(  
                 name="Color 1",
                 subtype='COLOR',
                 default=(0.0, 0.0, 0.24),
                 min=0.0, max=1.0,
                 description="Color Input 1",
                 update=lambda self, context: self._update_mixbox_color_test(context),
-                ); exec(vcu.convert_attribute_to_28("mixbox_color1"))
+                )
 
-    mixbox_color2 = FloatVectorProperty(  
+    mixbox_color2: FloatVectorProperty(  
                 name="Color 2",
                 subtype='COLOR',
                 default=(0.7, 0.7, 0.0),
                 min=0.0, max=1.0,
                 description="Color Input 2",
                 update=lambda self, context: self._update_mixbox_color_test(context),
-                ); exec(vcu.convert_attribute_to_28("mixbox_color2"))
+                )
 
-    num_gradient_samples = IntProperty(default=25)
-    exec(vcu.convert_attribute_to_28("num_gradient_samples"))
+    num_gradient_samples: IntProperty(default=25)
     FAKE_PREFERENCES.num_gradient_samples = 0
 
-    mixbox_gradient_result = CollectionProperty(type=FLIPFluidColorMixbox)
-    exec(vcu.convert_attribute_to_28("mixbox_gradient_result"))
+    mixbox_gradient_result: CollectionProperty(type=FLIPFluidColorMixbox)
     FAKE_PREFERENCES.mixbox_gradient_result = []
 
-    rgb_gradient_result = CollectionProperty(type=FLIPFluidColorRGB)
-    exec(vcu.convert_attribute_to_28("rgb_gradient_result"))
+    rgb_gradient_result: CollectionProperty(type=FLIPFluidColorRGB)
     FAKE_PREFERENCES.rgb_gradient_result = []
 
-    test_mixbox_expanded = BoolProperty(
+    test_mixbox_expanded: BoolProperty(
                 default=False, 
                 update=lambda self, context: self._update_mixbox_color_test(context)
                 ); 
-    exec(vcu.convert_attribute_to_28("test_mixbox_expanded"))
 
-    preset_library_install_mode = EnumProperty(
+    preset_library_install_mode: EnumProperty(
             name="Preset Library Install Method",
             description="Installation Method",
             items=types.preset_library_install_modes,
             default='PRESET_LIBRARY_INSTALL_ZIP',
             options={'HIDDEN'},
-            ); exec(vcu.convert_attribute_to_28("preset_library_install_mode"))
+            )
 
-    preset_library_install_location = StringProperty(
+    preset_library_install_location: StringProperty(
             name="",
             description="Select a location to install the Preset Scenes Library."
                 " This should be a location on your system where you have read and write file permissions",
             default="", 
             subtype='DIR_PATH',
+            options=option_path_supports_blend_relative,
             ); 
-    exec(vcu.convert_attribute_to_28("preset_library_install_location"))
     FAKE_PREFERENCES.preset_library_install_location = ""
 
-    is_preset_library_installation_error = BoolProperty(default=False)
-    exec(vcu.convert_attribute_to_28("is_preset_library_installation_error"))
+    is_preset_library_installation_error: BoolProperty(default=False)
     FAKE_PREFERENCES.is_preset_library_installation_error = False
 
-    preset_library_installation_error_message = StringProperty(default="")
-    exec(vcu.convert_attribute_to_28("preset_library_installation_error_message"))
+    preset_library_installation_error_message: StringProperty(default="")
     FAKE_PREFERENCES.preset_library_installation_error_message = ""
 
-    preset_library_installations_expanded = BoolProperty(default=True); 
-    exec(vcu.convert_attribute_to_28("preset_library_installations_expanded"))
+    preset_library_installations_expanded: BoolProperty(default=True); 
 
-    dismiss_T88811_crash_warning = BoolProperty(
+    dismiss_T88811_crash_warning: BoolProperty(
             name="Dismiss render crash bug warnings", 
             description="Dismiss warnings in UI when features are enabled that can trigger a"
                 " bug in Blender (T88811) that can cause frequent render crashes or incorrect"
@@ -338,10 +301,9 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 " cmd render. This option can be reset in the addon preferences", 
             default=False,
             ); 
-    exec(vcu.convert_attribute_to_28("dismiss_T88811_crash_warning"))
     FAKE_PREFERENCES.dismiss_T88811_crash_warning = False
 
-    dismiss_persistent_data_render_warning = BoolProperty(
+    dismiss_persistent_data_render_warning: BoolProperty(
             name="Dismiss persistent data warnings", 
             description="Dismiss warnings in UI when the Cycles Persistent Data option is enabled."
             " This render option is not compatible with the simulation meshes and can cause render"
@@ -351,10 +313,9 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
             " automatically launch a cmd render. This option can be reset in the addon preferences", 
             default=False,
             ); 
-    exec(vcu.convert_attribute_to_28("dismiss_persistent_data_render_warning"))
     FAKE_PREFERENCES.dismiss_persistent_data_render_warning = False
 
-    dismiss_rtx_driver_warning = BoolProperty(
+    dismiss_rtx_driver_warning: BoolProperty(
             name="Dismiss NVIDIA GeForce RTX Driver Warning", 
             description="Dismiss warning in the FLIP Fluids preferences menu related to a recent NVIDIA"
                 " GeForce RTX 'Game Ready Driver' update that may cause Blender to crash frequently when baking"
@@ -363,10 +324,9 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 " creation software",
             default=False,
             ); 
-    exec(vcu.convert_attribute_to_28("dismiss_rtx_driver_warning"))
     FAKE_PREFERENCES.dismiss_rtx_driver_warning = False
 
-    dismiss_export_animated_mesh_parented_relation_hint = BoolProperty(
+    dismiss_export_animated_mesh_parented_relation_hint: BoolProperty(
             name="Dismiss 'Export Animated Mesh' parented relation hint", 
             description="Dismiss hints about enabling 'Export Animated Mesh' in the FLIP object UI"
                 " when parented relations are detected. The 'Export Animated Mesh' option is required"
@@ -375,10 +335,9 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 " This option is not needed for static objects",
             default=False,
             ); 
-    exec(vcu.convert_attribute_to_28("dismiss_export_animated_mesh_parented_relation_hint"))
     FAKE_PREFERENCES.dismiss_export_animated_mesh_parented_relation_hint = False
 
-    enable_tabbed_domain_settings_view = BoolProperty(
+    enable_tabbed_domain_settings_view: BoolProperty(
                 name="Enable Tabbed Domain Settings",
                 description="Enable tabbed domain settings view. If enabled, domain panel categories will be displayed"
                     " using a tab header selector. If disabled, the classic view will display all domain panel categories"
@@ -386,12 +345,11 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 default=True,
                 options={'HIDDEN'},
                 )
-    exec(vcu.convert_attribute_to_28("enable_tabbed_domain_settings_view"))
     FAKE_PREFERENCES.enable_tabbed_domain_settings_view = True
 
 
-    def is_developer_tools_enabled(self):
-        return self.enable_developer_tools or installation_utils.is_experimental_build()
+    def is_extra_features_enabled(self):
+        return self.enable_extra_features or installation_utils.is_experimental_build()
 
 
     def _update_enable_helper(self, context):
@@ -446,16 +404,16 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
         column = box.column(align=True)
         column.label(text="Install Mixbox Color Blending Plugin:")
 
-        if not self.is_developer_tools_enabled():
+        if not self.is_extra_features_enabled():
             if installation_utils.is_mixbox_supported():
-                column.label(text="Activate the 'Enable Developer Tools' option to access this feature:", icon='INFO')
+                column.label(text="Activate the 'Enable Extra Features' option to access this feature:", icon='INFO')
 
                 row = column.row(align=True)
                 row.alignment = 'LEFT'
-                row.prop(self, "enable_developer_tools")
+                row.prop(self, "enable_extra_features")
                 row.operator(
                     "wm.url_open", 
-                    text="What are the developer tools and hidden features?", 
+                    text="What are the extra features?", 
                     icon="URL"
                 ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Preferences-Menu-Settings#developer-tools"
 
@@ -480,12 +438,8 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 icon="URL"
             ).url = "https://scrtwpns.com/mixbox/"
             return
-        
-        if not vcu.is_blender_293():
-            box.label(text="Blender 2.93 or later is required for this feature", icon='ERROR')
 
         column = box.column(align=True)
-        column.enabled = vcu.is_blender_293()
         if not is_installed:
             subbox = column.box()
             sub_column = subbox.column(align=True)
@@ -614,7 +568,7 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
         month_to_str[11] = "nov"
         month_to_str[12] = "dec"
 
-        date_str = "(" + str(dd).zfill(2) + "-" + month_to_str[int(mm)] + "-" + str(yyyy) + ")"
+        date_str = "(" + str(yyyy) + "-" + str(mm).zfill(2) + "-" + str(dd).zfill(2) + ")"
         return date_str
 
 
@@ -622,8 +576,6 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
         box = self.layout.box()
         box.label(text="Install Preset Scenes Library:")
 
-        if not vcu.is_blender_33():
-            box.label(text="Blender 3.3 or later is required for this feature", icon="ERROR")
 
         is_preset_library_supported = True
         if not is_preset_library_supported:
@@ -652,7 +604,6 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Preset-Library-Installation-and-Uninstallation"
 
         column = box.column(align=True)
-        column.enabled = vcu.is_blender_33()
 
         row = column.row()
         row.prop(self, "preset_library_install_mode", expand=True)
@@ -803,7 +754,6 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
         helper_column = box.column(align=True)
         helper_column.label(text="UI Options:")
         helper_column.prop(self, "enable_tabbed_domain_settings_view")
-        helper_column.prop(self, "show_documentation_in_ui")
 
         row = helper_column.row()
         row.alignment = 'LEFT'
@@ -827,15 +777,14 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
         row.label(text="")
         helper_column.separator()
 
-        if vcu.is_blender_28():
-            box = self.layout.box()
-            box.enabled = is_installation_complete
-            helper_column = box.column(align=True)
-            helper_column.label(text="Sounds:")
-            row = helper_column.row(align=True)
-            row.alignment = 'LEFT'
-            row.prop(self, "enable_bake_alarm")
-            row.operator("flip_fluid_operators.test_bake_alarm", icon='PLAY_SOUND')
+        box = self.layout.box()
+        box.enabled = is_installation_complete
+        helper_column = box.column(align=True)
+        helper_column.label(text="Sounds:")
+        row = helper_column.row(align=True)
+        row.alignment = 'LEFT'
+        row.prop(self, "enable_bake_alarm")
+        row.operator("flip_fluid_operators.test_bake_alarm", icon='PLAY_SOUND')
 
         box = self.layout.box()
         box.enabled = is_installation_complete
@@ -847,14 +796,13 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
 
         row = helper_column.row(align=True)
         row.alignment = 'LEFT'
-        row.prop(self, "enable_developer_tools")
+        row.prop(self, "enable_extra_features")
         row.operator(
             "wm.url_open", 
-            text="What are the developer tools and hidden features?", 
+            text="What are the extra features?", 
             icon="URL"
         ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Preferences-Menu-Settings#developer-tools"
-
-        helper_column.prop(self, "engine_debug_mode")
+        
         helper_column.prop(self, "enable_blend_file_logging")
         helper_column.prop(self, "enable_support_tools")
 
@@ -929,6 +877,7 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
                 text="Tutorials and Learning Resources", 
                 icon="URL"
             ).url = "https://github.com/rlguy/Blender-FLIP-Fluids/wiki/Video-Learning-Series"
+        column_left.separator()
 
         box = self.layout.box()
         column = box.column(align=True)
@@ -982,8 +931,8 @@ class FLIPFluidAddonPreferences(bpy.types.AddonPreferences):
             ).url = "https://www.instagram.com/flip.fluids/"
         row.operator(
                 "wm.url_open", 
-                text="Twitter", 
-            ).url = "https://twitter.com/flipfluids"
+                text="X (Twitter)", 
+            ).url = "https://x.com/flipfluids"
         row.operator(
                 "wm.url_open", 
                 text="Facebook", 

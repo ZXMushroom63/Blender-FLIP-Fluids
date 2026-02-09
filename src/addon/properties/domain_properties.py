@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -70,94 +70,94 @@ from ..utils import api_workaround_utils
 
 
 class FlipFluidDomainProperties(bpy.types.PropertyGroup):
-    conv = vcu.convert_attribute_to_28
 
-    render = PointerProperty(
+    render: PointerProperty(
             name="Domain Render Properties",
             description="",
             type=domain_render_properties.DomainRenderProperties,
-            ); exec(conv("render"))
-    bake = PointerProperty(
+            )
+    bake: PointerProperty(
             name="Domain Bake Properties",
             description="",
             type=domain_bake_properties.DomainBakeProperties,
-            ); exec(conv("bake"))
-    simulation = PointerProperty(
+            )
+    simulation: PointerProperty(
             name="Domain Simulation Properties",
             description="",
             type=domain_simulation_properties.DomainSimulationProperties,
-            ); exec(conv("simulation"))
-    cache = PointerProperty(
+            )
+    cache: PointerProperty(
             name="Domain Cache Properties",
             description="",
             type=domain_cache_properties.DomainCacheProperties,
-            ); exec(conv("cache"))
-    particles = PointerProperty(
+            )
+    particles: PointerProperty(
             name="Domain Surface Properties",
             description="",
             type=domain_particles_properties.DomainParticlesProperties,
-            ); exec(conv("particles"))
-    surface = PointerProperty(
+            )
+    surface: PointerProperty(
             name="Domain Surface Properties",
             description="",
             type=domain_surface_properties.DomainSurfaceProperties,
-            ); exec(conv("surface"))
-    whitewater = PointerProperty(
+            )
+    whitewater: PointerProperty(
             name="Domain Whitewater Properties",
             description="",
             type=domain_whitewater_properties.DomainWhitewaterProperties,
-            ); exec(conv("whitewater"))
-    world = PointerProperty(
+            )
+    world: PointerProperty(
             name="Domain World Properties",
             description="",
             type=domain_world_properties.DomainWorldProperties,
-            ); exec(conv("world"))
-    presets = PointerProperty(
+            )
+    presets: PointerProperty(
             name="Domain Presets Properties",
             description="",
             type=domain_presets_properties.DomainPresetsProperties,
-            ); exec(conv("presets"))
-    materials = PointerProperty(
+            )
+    materials: PointerProperty(
             name="Domain Materials Properties",
             description="",
             type=domain_materials_properties.DomainMaterialsProperties,
-            ); exec(conv("materials"))
-    advanced = PointerProperty(
+            )
+    advanced: PointerProperty(
             name="Domain Advanced Properties",
             description="",
             type=domain_advanced_properties.DomainAdvancedProperties,
-            ); exec(conv("advanced"))
-    debug = PointerProperty(
+            )
+    debug: PointerProperty(
             name="Domain Debug Properties",
             description="",
             type=domain_debug_properties.DomainDebugProperties,
-            ); exec(conv("debug"))
-    stats = PointerProperty(
+            )
+    stats: PointerProperty(
             name="Domain Stats Properties",
             description="",
             type=domain_stats_properties.DomainStatsProperties,
-            ); exec(conv("stats"))
-    mesh_cache = PointerProperty(
+            )
+    mesh_cache: PointerProperty(
             name="Domain Mesh Cache",
             description="",
             type=flip_fluid_cache.FlipFluidCache,
-            ); exec(conv("mesh_cache"))
-    property_registry = PointerProperty(
+            )
+    property_registry: PointerProperty(
             name="Domain Property Registry",
             description="",
             type=preset_properties.PresetRegistry,
-            ); exec(conv("property_registry"))
+            )
 
-    domain_settings_tabbed_panel_view = EnumProperty(
+    domain_settings_tabbed_panel_view: EnumProperty(
             name="Domain Panel View",
             description="Select settings panel to display",
             items=types.domain_settings_panel,
             default='DOMAIN_SETTINGS_PANEL_SIMULATION',
             options={'HIDDEN'},
-            ); exec(conv("domain_settings_tabbed_panel_view"))
+            )
 
-    is_updated_to_flip_fluids_version_180 = BoolProperty(default=False)
-    exec(conv("is_updated_to_flip_fluids_version_180"));
+    is_updated_to_flip_fluids_version_180: BoolProperty(default=False)
+    is_updated_to_flip_fluids_version_184: BoolProperty(default=False)
+    is_updated_to_flip_fluids_version_185: BoolProperty(default=False)
 
 
     def initialize(self):
@@ -170,6 +170,7 @@ class FlipFluidDomainProperties(bpy.types.PropertyGroup):
         self.presets.initialize()
 
         self.is_updated_to_flip_fluids_version_180 = True
+        self.is_updated_to_flip_fluids_version_184 = True
 
 
     def dummy_initialize(self):
@@ -334,10 +335,10 @@ class FlipFluidDomainProperties(bpy.types.PropertyGroup):
         mesh_caches = [mesh_cache_foam, mesh_cache_bubble, mesh_cache_spray, mesh_cache_dust]
 
         resource_names = [
-            "FF_MotionBlurWhitewaterFoam", 
-            "FF_MotionBlurWhitewaterBubble", 
-            "FF_MotionBlurWhitewaterSpray", 
-            "FF_MotionBlurWhitewaterDust"
+            "FF_GeometryNodesWhitewaterFoam", 
+            "FF_GeometryNodesWhitewaterBubble", 
+            "FF_GeometryNodesWhitewaterSpray", 
+            "FF_GeometryNodesWhitewaterDust"
             ]
 
         for idx, mesh_cache in enumerate(mesh_caches):
@@ -359,7 +360,7 @@ class FlipFluidDomainProperties(bpy.types.PropertyGroup):
 
                 try:
                     # Input flip_velocity
-                    gn_modifier["Input_2_use_attribute"] = 1
+                    gn_modifier["Input_2_use_attribute"] = True
                     gn_modifier["Input_2_attribute_name"] = 'flip_velocity'
                 except:
                     pass
@@ -391,6 +392,74 @@ class FlipFluidDomainProperties(bpy.types.PropertyGroup):
 
         print("*** Finished updating FLIP Domain to FLIP Fluids version 1.8.0+ ***\n")
         self.is_updated_to_flip_fluids_version_180 = True
+
+
+    def _update_to_flip_fluids_version_184(self):
+        dprops = bpy.context.scene.flip_fluid.get_domain_properties()
+        if dprops is None:
+            return
+
+        if self.is_updated_to_flip_fluids_version_184:
+            return
+
+        print("\n*** Begin updating FLIP Domain to FLIP Fluids version 1.8.4+ ***")
+
+        mesh_cache_surface = dprops.mesh_cache.surface.get_cache_object()
+        mesh_cache_particles = dprops.mesh_cache.particles.get_cache_object()
+        mesh_cache_foam = dprops.mesh_cache.foam.get_cache_object()
+        mesh_cache_bubble = dprops.mesh_cache.bubble.get_cache_object()
+        mesh_cache_spray = dprops.mesh_cache.spray.get_cache_object()
+        mesh_cache_dust = dprops.mesh_cache.dust.get_cache_object()
+        mesh_caches = [mesh_cache_surface, mesh_cache_particles, mesh_cache_foam, mesh_cache_bubble, mesh_cache_spray, mesh_cache_dust]
+
+        for mcache in mesh_caches:
+            if mcache is None:
+                continue
+            for mod in mcache.modifiers:
+                if mod.type != 'NODES':
+                    continue
+                if mod.name.startswith("FF_MotionBlur"):
+                    old_name = mod.name
+                    new_name = old_name.replace("FF_MotionBlur", "FF_GeometryNodes", 1)
+                    mod.name = new_name
+                    print("\tUpdated modifier name on <" + mcache.name + "> from <" + old_name + ">" + " to <" + new_name + ">")
+
+        for mcache in mesh_caches:
+            if mcache is None:
+                continue
+            for mod in mcache.modifiers:
+                if mod.type != 'NODES':
+                    continue
+                if mod.node_group.name.startswith("FF_MotionBlur"):
+                    old_name = mod.node_group.name
+                    new_name = old_name.replace("FF_MotionBlur", "FF_GeometryNodes", 1)
+                    mod.node_group.name = new_name
+                    print("\tUpdated modifier node group name  on <" + mcache.name + "> from <" + old_name + ">" + " to <" + new_name + ">")
+
+        print("*** Finished updating FLIP Domain to FLIP Fluids version 1.8.4+ ***\n")
+        self.is_updated_to_flip_fluids_version_184 = True
+
+
+    def _update_to_flip_fluids_version_185(self):
+        dprops = bpy.context.scene.flip_fluid.get_domain_properties()
+        if dprops is None:
+            return
+
+        if self.is_updated_to_flip_fluids_version_185:
+            return
+
+        print("\n*** Begin updating FLIP Domain to FLIP Fluids version 1.8.5+ ***")
+
+        parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        blend_resource_filename = "geometry_nodes_library.blend"
+        resource_filepath = os.path.join(parent_path, "resources", "geometry_nodes", blend_resource_filename)
+
+        # Fluid surface should now always have a FF_GeometryNodesSurface modifier
+        mesh_cache_surface = dprops.mesh_cache.surface.get_cache_object()
+        gn_modifier = helper_operators.add_geometry_node_modifier(mesh_cache_surface, resource_filepath, "FF_GeometryNodesSurface")
+
+        print("*** Finished updating FLIP Domain to FLIP Fluids version 1.8.5+ ***\n")
+        self.is_updated_to_flip_fluids_version_185 = True
 
 
     def scene_update_post(self, scene):
@@ -428,6 +497,8 @@ class FlipFluidDomainProperties(bpy.types.PropertyGroup):
 
         api_workaround_utils.load_post_update_cycles_visibility_forward_compatibility_from_blender_3()
         self._update_to_flip_fluids_version_180()
+        self._update_to_flip_fluids_version_184()
+        self._update_to_flip_fluids_version_185()
 
 
     def save_pre(self):

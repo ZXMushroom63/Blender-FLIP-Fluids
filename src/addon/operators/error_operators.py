@@ -1,5 +1,5 @@
 # Blender FLIP Fluids Add-on
-# Copyright (C) 2024 Ryan L. Guy
+# Copyright (C) 2025 Ryan L. Guy & Dennis Fassbaender
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,14 +28,9 @@ class FlipFluidDisplayError(bpy.types.Operator):
     bl_label = ""
     bl_description = ""
 
-    error_message = StringProperty()
-    exec(vcu.convert_attribute_to_28("error_message"))
-
-    error_description = StringProperty()
-    exec(vcu.convert_attribute_to_28("error_description"))
-
-    popup_width = IntProperty(default=400)
-    exec(vcu.convert_attribute_to_28("popup_width"))
+    error_message: StringProperty()
+    error_description: StringProperty()
+    popup_width: IntProperty(default=400)
 
 
     def draw(self, context):
